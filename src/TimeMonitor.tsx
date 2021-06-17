@@ -1,9 +1,9 @@
-import {EPOCHS_PER_SYNC_COMMITTEE_PERIOD, SLOTS_PER_EPOCH} from "@chainsafe/lodestar-params";
 import React, {useState, useEffect} from "react";
+import {EPOCHS_PER_SYNC_COMMITTEE_PERIOD, SLOTS_PER_EPOCH} from "@chainsafe/lodestar-params";
 import {config, genesisTime} from "./config";
 
 export function TimeMonitor(): JSX.Element {
-  const [_counter, setCounter] = useState<number>();
+  const [, setCounter] = useState<number>();
   useEffect(() => {
     const interval = setInterval(() => {
       setCounter((x) => (x ?? 0) + 1);

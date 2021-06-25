@@ -5,6 +5,11 @@
   --background-color: #121212;
   --background-color-card: #1e1d1d;
   --text-color: white;
+
+  // Force full heigh
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 body {

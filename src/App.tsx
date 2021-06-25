@@ -33,7 +33,10 @@ export default function App(): JSX.Element {
         const modules = {config, clock, genesisValidatorsRoot, beaconApiUrl};
         const client = prevSnapshot
           ? Lightclient.initializeFromTrustedSnapshot(modules, prevSnapshot)
-          : await Lightclient.initializeFromTrustedStateRoot(modules, trustedRoot);
+          : await Lightclient.initializeFromCheckpoint(modules.config, modules.beaconApiUrl, {
+              epoch: trustedRoot.slot,
+              root: trustedRoot.stateRoot,
+            });
         setReqStatusInit({result: client});
       } catch (e) {
         setReqStatusInit({error: e});

@@ -10,7 +10,7 @@ import {config} from "./config";
 import {writeSnapshot} from "./storage";
 
 export function SyncStatus({client}: {client: Lightclient}): JSX.Element {
-  const [_header, setHeader] = useState<altair.BeaconBlockHeader>();
+  const [header, setHeader] = useState<altair.BeaconBlockHeader>();
   const [reqStatusSync, setReqStatusSync] = useState<ReqStatus>({});
 
   const sync = useCallback(async () => {
@@ -54,7 +54,7 @@ export function SyncStatus({client}: {client: Lightclient}): JSX.Element {
       <h2>Sync Status</h2>
       <div className="grid-2col-render">
         <span>syncPeriod</span>
-        <span>{computeSyncPeriodAtSlot(client.config, client.store.snapshot.header.slot)}</span>
+        <span>{header ? computeSyncPeriodAtSlot(client.config, header.slot) : "no header"}</span>
       </div>
 
       {reqStatusSync.result ? (
@@ -67,10 +67,16 @@ export function SyncStatus({client}: {client: Lightclient}): JSX.Element {
 
       <h3>Latest Synced Snapshot Header</h3>
       <div className="grid-2col-render">
-        <span>slot</span>
-        <span>{client.store.snapshot.header.slot}</span>
-        <span>stateRoot</span>
-        <span>{toHexString(client.store.snapshot.header.stateRoot)}</span>
+        {header ? (
+          <>
+            <span>slot</span>
+            <span>{header.slot}</span>
+            <span>stateRoot</span>
+            <span>{toHexString(header.stateRoot)}</span>
+          </>
+        ) : (
+          <span>no header</span>
+        )}
       </div>
     </section>
   );

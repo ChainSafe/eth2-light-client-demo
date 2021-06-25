@@ -14,7 +14,6 @@ const initialPathStr = `[
 
 type Path = (string | number)[];
 type StateRender = {key: string; value: string}[];
-type Json = Record<string | number, string | number>;
 
 function renderState(paths: Path[], state: TreeBacked<altair.BeaconState> | null): StateRender {
   if (!state) return [];

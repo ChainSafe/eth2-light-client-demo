@@ -1,8 +1,8 @@
 import React, {useState, useEffect} from "react";
 import {EPOCHS_PER_SYNC_COMMITTEE_PERIOD, SLOTS_PER_EPOCH} from "@chainsafe/lodestar-params";
-import {config, genesisTime} from "./config";
+import {Lightclient} from "@chainsafe/lodestar-light-client/lib/client";
 
-export function TimeMonitor(): JSX.Element {
+export function TimeMonitor({client}: {client: Lightclient}): JSX.Element {
   const [, setCounter] = useState<number>();
   useEffect(() => {
     const interval = setInterval(() => {
@@ -11,9 +11,13 @@ export function TimeMonitor(): JSX.Element {
     return () => clearInterval(interval);
   }, [setCounter]);
 
-  const {SECONDS_PER_SLOT} = config;
+  const {SECONDS_PER_SLOT} = client.config;
   const secondsPerEpoch = SECONDS_PER_SLOT * SLOTS_PER_EPOCH;
   const secondsPerPeriod = secondsPerEpoch * EPOCHS_PER_SYNC_COMMITTEE_PERIOD;
+
+  // TODO: fix types
+  // @ts-ignore
+  const genesisTime = client.clock["genesisTime"];
 
   const diffInSeconds = Date.now() / 1000 - genesisTime;
   const slot = Math.floor(diffInSeconds / SECONDS_PER_SLOT);

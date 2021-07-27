@@ -6,7 +6,6 @@ import {altair} from "@chainsafe/lodestar-types";
 import {toHexString} from "@chainsafe/ssz";
 import {ErrorView} from "./components/ErrorView";
 import {ReqStatus} from "./types";
-import {config} from "./config";
 import {writeSnapshot} from "./storage";
 
 export function SyncStatus({client}: {client: Lightclient}): JSX.Element {
@@ -20,6 +19,7 @@ export function SyncStatus({client}: {client: Lightclient}): JSX.Element {
       setReqStatusSync({result: true});
     } catch (e) {
       setReqStatusSync({error: e});
+      console.error(e);
     }
   }, [client, setReqStatusSync]);
 
@@ -30,7 +30,7 @@ export function SyncStatus({client}: {client: Lightclient}): JSX.Element {
 
   // Sync every epoch
   useEffect(() => {
-    const interval = setInterval(sync, config.SECONDS_PER_SLOT * 1000);
+    const interval = setInterval(sync, client.config.SECONDS_PER_SLOT * 1000);
     return () => clearInterval(interval);
   });
 

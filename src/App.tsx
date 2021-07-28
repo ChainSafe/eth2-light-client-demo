@@ -4,7 +4,7 @@ import {Lightclient} from "@chainsafe/lodestar-light-client/lib/client";
 import {Clock} from "@chainsafe/lodestar-light-client/lib/utils/clock";
 import {init} from "@chainsafe/bls";
 import {fromHexString} from "@chainsafe/ssz";
-import {createIBeaconConfig, IBeaconConfig} from "@chainsafe/lodestar-config";
+import {createIChainForkConfig, IChainForkConfig} from "@chainsafe/lodestar-config";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import {ErrorView} from "./components/ErrorView";
@@ -28,10 +28,10 @@ export default function App(): JSX.Element {
     });
   }, []);
 
-  async function fetchConfig(): Promise<IBeaconConfig> {
+  async function fetchConfig(): Promise<IChainForkConfig> {
     const client = getClient(configLeve, {baseUrl: beaconApiUrl});
     const {data} = await client.config.getSpec();
-    return createIBeaconConfig(data);
+    return createIChainForkConfig(data);
   }
 
   async function initializeFromLocalSnapshot() {

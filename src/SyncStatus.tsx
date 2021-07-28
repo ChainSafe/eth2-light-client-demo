@@ -16,6 +16,7 @@ export function SyncStatus({client}: {client: Lightclient}): JSX.Element {
     try {
       setReqStatusSync({loading: true});
       await client.sync();
+      await client.syncToLatest();
       setReqStatusSync({result: true});
     } catch (e) {
       setReqStatusSync({error: e});
@@ -54,7 +55,7 @@ export function SyncStatus({client}: {client: Lightclient}): JSX.Element {
       <h2>Sync Status</h2>
       <div className="grid-2col-render">
         <span>syncPeriod</span>
-        <span>{header ? computeSyncPeriodAtSlot(client.config, header.slot) : "no header"}</span>
+        <span>{header ? computeSyncPeriodAtSlot(header.slot) : "no header"}</span>
       </div>
 
       {reqStatusSync.result ? (

@@ -18,7 +18,7 @@ import {Checkpoint} from "@chainsafe/lodestar-types/phase0";
 import {toHexString} from "@chainsafe/ssz";
 
 export default function App(): JSX.Element {
-  const [beaconApiUrl, setBeaconApiUrl] = useState("http://161.97.179.211:9596");
+  const [beaconApiUrl, setBeaconApiUrl] = useState("https://altair-devnet-2.lodestar.casa");
   const [checkpointStr, setCheckpointStr] = useState("<root>:<epoch>");
   const [reqStatusInit, setReqStatusInit] = useState<ReqStatus<Lightclient, string>>({});
 

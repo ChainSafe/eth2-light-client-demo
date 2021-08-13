@@ -6,7 +6,7 @@ export default function Footer(): JSX.Element {
     <footer>
       <div className="content has-text-centered">
         Made with ❤️ by{" "}
-        <a className="is-link has-text-danger is-family-code" href="https://chainsafe.io">
+        <a className="is-link red is-family-code" href="https://chainsafe.io">
           ChainSafe Systems
         </a>
         <br />

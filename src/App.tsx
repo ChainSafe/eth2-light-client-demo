@@ -5,14 +5,13 @@ import {Clock} from "@chainsafe/lodestar-light-client/lib/utils/clock";
 import {init} from "@chainsafe/bls";
 import {fromHexString} from "@chainsafe/ssz";
 import {createIChainForkConfig, IChainForkConfig} from "@chainsafe/lodestar-config";
-import Header from "./components/Header";
 import Footer from "./components/Footer";
 import {ErrorView} from "./components/ErrorView";
 import {SyncStatus} from "./SyncStatus";
 import {TimeMonitor} from "./TimeMonitor";
 import {ProofReqResp} from "./ProofReqResp";
 import {ReqStatus} from "./types";
-import {readSnapshot} from "./storage";
+import {readGenesisTime, readSnapshot, hasSnapshot} from "./storage";
 import {configLeve, genesisValidatorsRoot} from "./config";
 import {Checkpoint} from "@chainsafe/lodestar-types/phase0";
 import {toHexString} from "@chainsafe/ssz";
@@ -21,6 +20,7 @@ export default function App(): JSX.Element {
   const [beaconApiUrl, setBeaconApiUrl] = useState("https://altair-devnet-3.lodestar.casa");
   const [checkpointStr, setCheckpointStr] = useState("<root>:<epoch>");
   const [reqStatusInit, setReqStatusInit] = useState<ReqStatus<Lightclient, string>>({});
+  const [localAvailable, setLocalAvailable] = useState(false);
 
   useEffect(() => {
     init("herumi").catch((e) => {
@@ -28,24 +28,35 @@ export default function App(): JSX.Element {
     });
   }, []);
 
+  // Check if local snapshot is available
+  useEffect(() => {
+    setLocalAvailable(hasSnapshot());
+  }, [reqStatusInit.result]);
+
   async function fetchConfig(): Promise<IChainForkConfig> {
     const client = getClient(configLeve, {baseUrl: beaconApiUrl});
     const {data} = await client.config.getSpec();
     return createIChainForkConfig(data);
   }
 
+  async function fetchGenesisTime(): Promise<number> {
+    const client = getClient(configLeve, {baseUrl: beaconApiUrl});
+    const {data: genesis} = await client.beacon.getGenesis();
+    return Number(genesis.genesisTime);
+  }
+
   async function initializeFromLocalSnapshot() {
     try {
-      // TODO: Fetch from snapshot
-      const genesisTime = 1620648600;
-
-      const config = await fetchConfig();
-      const clock = new Clock(config, genesisTime);
       // Check if there is state persisted
       const prevSnapshot = readSnapshot();
       if (!prevSnapshot) {
         throw Error("No snapshot stored locally");
       }
+
+      const genesisTime = readGenesisTime() ?? (await fetchGenesisTime());
+
+      const config = await fetchConfig();
+      const clock = new Clock(config, genesisTime);
 
       setReqStatusInit({
         loading: `Restoring prevSnapshot at slot ${prevSnapshot.header.slot}`,
@@ -115,9 +126,16 @@ export default function App(): JSX.Element {
 
   return (
     <>
-      <Header />
-
       <main>
+        <section className="hero">
+          <h1>Lodestar Eth2.0 light-client demo</h1>
+
+          <p>
+            Showcase of a REST-based Eth2.0 lightclient. Initialize from a trusted checkpoint or node, sync to lastest
+            finalized state and request proofs
+          </p>
+        </section>
+
         <section>
           <div className="field">
             <div className="control">
@@ -125,6 +143,8 @@ export default function App(): JSX.Element {
               <input value={beaconApiUrl} onChange={(e) => setBeaconApiUrl(e.target.value)} />
             </div>
           </div>
+
+          <br></br>
 
           <div className="field">
             <div className="control">
@@ -149,13 +169,15 @@ export default function App(): JSX.Element {
             </div>
           </div>
 
-          <div className="field">
-            <div className="control">
-              <button className="strong-gradient" onClick={initializeFromLocalSnapshot}>
-                Initialize from local snaphost
-              </button>
+          {localAvailable && (
+            <div className="field">
+              <div className="control">
+                <button className="strong-gradient" onClick={initializeFromLocalSnapshot}>
+                  Initialize from local snaphost
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </section>
 
         {reqStatusInit.result ? (

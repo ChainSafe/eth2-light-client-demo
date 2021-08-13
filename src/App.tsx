@@ -163,7 +163,7 @@ export default function App(): JSX.Element {
                   <div className="control">
                     <p>Trusted checkpoint</p>
                     <input value={checkpointStr} onChange={(e) => setCheckpointStr(e.target.value)} />
-                    <button className="strong-gradient" onClick={fillCheckpointFromNode}>
+                    <button className="dark" onClick={fillCheckpointFromNode}>
                       Trust node
                     </button>
                   </div>

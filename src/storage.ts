@@ -9,6 +9,11 @@ export function hasSnapshot(): boolean {
   return snapshotKey in localStorage;
 }
 
+export function deleteSnapshot(): void {
+  localStorage.removeItem(snapshotKey);
+  localStorage.removeItem(genesisTimeKey);
+}
+
 export function readSnapshot(): altair.LightClientSnapshot | null {
   try {
     const str = localStorage.getItem(snapshotKey);

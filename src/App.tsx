@@ -11,7 +11,7 @@ import {SyncStatus} from "./SyncStatus";
 import {TimeMonitor} from "./TimeMonitor";
 import {ProofReqResp} from "./ProofReqResp";
 import {ReqStatus} from "./types";
-import {readGenesisTime, readSnapshot, hasSnapshot} from "./storage";
+import {readGenesisTime, readSnapshot, hasSnapshot, deleteSnapshot} from "./storage";
 import {configLeve, genesisValidatorsRoot} from "./config";
 import {Checkpoint} from "@chainsafe/lodestar-types/phase0";
 import {toHexString} from "@chainsafe/ssz";
@@ -109,19 +109,27 @@ export default function App(): JSX.Element {
     }
   }
 
-  async function initializeFromTrustedNode() {
+  async function fillCheckpointFromNode() {
     try {
-      setReqStatusInit({loading: "Initializing from trusted node"});
+      setReqStatusInit({loading: "Fetching checkpoint from trusted node"});
 
       const client = getClient(configLeve, {baseUrl: beaconApiUrl});
       const res = await client.beacon.getStateFinalityCheckpoints("head");
       const finalizedCheckpoint = res.data.finalized;
-      await initializeFromCheckpoint(finalizedCheckpoint);
+      setCheckpointStr(toCheckpointStr(finalizedCheckpoint));
+
+      // Hasn't load clint, just disable loader
+      setReqStatusInit({});
     } catch (e) {
       e.message = `Error initializing from trusted node: ${e.message}`;
       setReqStatusInit({error: e});
       console.error(e);
     }
+  }
+
+  function deleteState() {
+    deleteSnapshot();
+    setReqStatusInit({});
   }
 
   return (
@@ -146,34 +154,43 @@ export default function App(): JSX.Element {
 
           <br></br>
 
-          <div className="field">
-            <div className="control">
-              <p>Trusted checkpoint</p>
-              <input value={checkpointStr} onChange={(e) => setCheckpointStr(e.target.value)} />
-            </div>
-          </div>
+          {!reqStatusInit.result ? (
+            <>
+              <div>
+                <div className="field trusted-checkpoint">
+                  <div className="control">
+                    <p>Trusted checkpoint</p>
+                    <input value={checkpointStr} onChange={(e) => setCheckpointStr(e.target.value)} />
+                    <button className="strong-gradient" onClick={fillCheckpointFromNode}>
+                      Trust node
+                    </button>
+                  </div>
+                </div>
 
-          <div className="field">
-            <div className="control">
-              <button className="strong-gradient" onClick={() => initializeFromCheckpointStr(checkpointStr)}>
-                Initialize from trusted checkpoint
-              </button>
-            </div>
-          </div>
+                <div className="field">
+                  <div className="control">
+                    <button className="strong-gradient" onClick={() => initializeFromCheckpointStr(checkpointStr)}>
+                      Initialize from trusted checkpoint
+                    </button>
+                  </div>
+                </div>
 
-          <div className="field">
-            <div className="control">
-              <button className="strong-gradient" onClick={initializeFromTrustedNode}>
-                Initialize from trusted node
-              </button>
-            </div>
-          </div>
-
-          {localAvailable && (
+                {localAvailable && (
+                  <div className="field">
+                    <div className="control">
+                      <button className="strong-gradient" onClick={initializeFromLocalSnapshot}>
+                        Initialize from local snaphost
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
             <div className="field">
               <div className="control">
-                <button className="strong-gradient" onClick={initializeFromLocalSnapshot}>
-                  Initialize from local snaphost
+                <button className="strong-gradient" onClick={deleteState}>
+                  Delete state
                 </button>
               </div>
             </div>
@@ -196,4 +213,8 @@ export default function App(): JSX.Element {
       <Footer />
     </>
   );
+}
+
+function toCheckpointStr(checkpoint: Checkpoint): string {
+  return `${toHexString(checkpoint.root)}:${checkpoint.epoch}`;
 }

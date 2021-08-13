@@ -3,18 +3,18 @@ import {getClient} from "@chainsafe/lodestar-api";
 import {Lightclient} from "@chainsafe/lodestar-light-client/lib/client";
 import {Clock} from "@chainsafe/lodestar-light-client/lib/utils/clock";
 import {init} from "@chainsafe/bls";
-import {fromHexString} from "@chainsafe/ssz";
+import {fromHexString, toHexString} from "@chainsafe/ssz";
+import {Checkpoint} from "@chainsafe/lodestar-types/phase0";
 import {createIChainForkConfig, IChainForkConfig} from "@chainsafe/lodestar-config";
 import Footer from "./components/Footer";
 import {ErrorView} from "./components/ErrorView";
+import {Loader} from "./components/Loader";
 import {SyncStatus} from "./SyncStatus";
 import {TimeMonitor} from "./TimeMonitor";
 import {ProofReqResp} from "./ProofReqResp";
 import {ReqStatus} from "./types";
 import {readGenesisTime, readSnapshot, hasSnapshot, deleteSnapshot} from "./storage";
 import {configLeve, genesisValidatorsRoot} from "./config";
-import {Checkpoint} from "@chainsafe/lodestar-types/phase0";
-import {toHexString} from "@chainsafe/ssz";
 
 export default function App(): JSX.Element {
   const [beaconApiUrl, setBeaconApiUrl] = useState("https://altair-devnet-3.lodestar.casa");
@@ -136,11 +136,13 @@ export default function App(): JSX.Element {
     <>
       <main>
         <section className="hero">
-          <h1>Lodestar Eth2.0 light-client demo</h1>
+          <h1>
+            Ethereum consensus <br></br> Lodestar light-client demo
+          </h1>
 
           <p>
-            Showcase of a REST-based Eth2.0 lightclient. Initialize from a trusted checkpoint or node, sync to lastest
-            finalized state and request proofs
+            Showcase of a REST-based Ethereum consensus light-client. Initialize from a trusted checkpoint or node, sync
+            to lastest finalized state and request proofs
           </p>
         </section>
 
@@ -179,7 +181,7 @@ export default function App(): JSX.Element {
                   <div className="field">
                     <div className="control">
                       <button className="strong-gradient" onClick={initializeFromLocalSnapshot}>
-                        Initialize from local snaphost
+                        Initialize from local snapshot
                       </button>
                     </div>
                   </div>
@@ -206,7 +208,10 @@ export default function App(): JSX.Element {
         ) : reqStatusInit.error ? (
           <ErrorView error={reqStatusInit.error} />
         ) : reqStatusInit.loading ? (
-          <p>Initializing Lightclient - {reqStatusInit.loading}</p>
+          <>
+            <Loader></Loader>
+            <p>Initializing light-client - {reqStatusInit.loading}</p>
+          </>
         ) : null}
       </main>
 

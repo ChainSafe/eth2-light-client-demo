@@ -3,7 +3,7 @@
 
 :root {
   --background-color: #121212;
-  --background-color-card: #1e1d1d;
+  --background-color-card: #1c1c20;
   --text-color: white;
 }
 
@@ -16,6 +16,10 @@
 
 body {
   background-color: var(--background-color);
+  background-image: url("./images/background-shape.png");
+  background-repeat: no-repeat;
+  background-size: 71rem 41rem;
+  background-position: top right;
   color: var(--text-color);
 }
 
@@ -29,27 +33,36 @@ header > .container {
   margin-left: auto;
 }
 
-header {
-  padding-top: 3rem;
-  padding-bottom: 3rem;
-  font-size: 3rem;
-  font-weight: bold;
-  background-color: var(--background-color-card);
+main > .hero {
+  max-width: 30rem;
+  margin-top: 2rem;
 }
 
 main {
   flex: auto; // Force to fill window vertically
-  padding-top: 3rem;
+  padding-top: 5rem;
+  padding-bottom: 8rem;
 }
 
 main > section {
-  margin-bottom: 6rem;
+  margin-bottom: 5rem;
 }
 
 footer {
   padding-top: 3rem;
   padding-bottom: 3rem;
   background-color: var(--background-color-card);
+  .red {
+    color: #cb2a29;
+  }
+  .logo-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+    img {
+      max-width: 20rem;
+    }
+  }
 }
 
 #app {
@@ -74,21 +87,21 @@ footer {
 h1 {
   margin-top: 0.67em;
   margin-bottom: 0.67em;
-  font-size: 3rem;
+  font-size: 2.2rem;
   font-weight: bold;
 }
 
 h2 {
   margin-top: 0.83em;
   margin-bottom: 0.83em;
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: bold;
 }
 
 h3 {
   margin-top: 1em;
   margin-bottom: 1em;
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   font-weight: bold;
 }
 
@@ -121,12 +134,12 @@ section > *:not(:last-child) {
 
 .progressbar > div,
 .strong-gradient {
-  background: #fe8c00; /* fallback for old browsers */
-  background: -webkit-linear-gradient(to right, #f83600, #fe8c00); /* Chrome 10-25, Safari 5.1-6 */
+  background: #b83d61; /* fallback for old browsers */
+  background: -webkit-linear-gradient(to right, #2498c5, #b83d61); /* Chrome 10-25, Safari 5.1-6 */
   background: linear-gradient(
     to right,
-    #f83600,
-    #fe8c00
+    #2498c5,
+    #b83d61
   ); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
 }
 
@@ -156,10 +169,45 @@ button {
   justify-content: center;
   padding: 0.75em 1rem;
   font-size: 1.2rem;
-  font-weight: bold;
   text-align: center;
   white-space: nowrap;
   align-items: center;
   display: inline-flex;
   vertical-align: top;
+}
+
+// input
+
+input {
+  padding: 9px;
+  border-radius: 6px;
+  border-width: 0;
+  width: 100%;
+  background-color: #312f2d;
+  color: white;
+  max-width: 33rem;
+}
+
+section > .field:not(:last-child) {
+  margin-bottom: 1rem;
+}
+
+.field > .control > *:not(:last-child) {
+  margin-bottom: 0.5rem;
+}
+
+.trusted-checkpoint {
+  input,
+  button {
+    height: 2.4rem;
+  }
+
+  input {
+    border-bottom-right-radius: 0;
+    border-top-right-radius: 0;
+  }
+  button {
+    border-bottom-left-radius: 0;
+    border-top-left-radius: 0;
+  }
 }

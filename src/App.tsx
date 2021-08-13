@@ -3,24 +3,24 @@ import {getClient} from "@chainsafe/lodestar-api";
 import {Lightclient} from "@chainsafe/lodestar-light-client/lib/client";
 import {Clock} from "@chainsafe/lodestar-light-client/lib/utils/clock";
 import {init} from "@chainsafe/bls";
-import {fromHexString} from "@chainsafe/ssz";
+import {fromHexString, toHexString} from "@chainsafe/ssz";
+import {Checkpoint} from "@chainsafe/lodestar-types/phase0";
 import {createIChainForkConfig, IChainForkConfig} from "@chainsafe/lodestar-config";
-import Header from "./components/Header";
 import Footer from "./components/Footer";
 import {ErrorView} from "./components/ErrorView";
+import {Loader} from "./components/Loader";
 import {SyncStatus} from "./SyncStatus";
 import {TimeMonitor} from "./TimeMonitor";
 import {ProofReqResp} from "./ProofReqResp";
 import {ReqStatus} from "./types";
-import {readSnapshot} from "./storage";
+import {readGenesisTime, readSnapshot, hasSnapshot, deleteSnapshot} from "./storage";
 import {configLeve, genesisValidatorsRoot} from "./config";
-import {Checkpoint} from "@chainsafe/lodestar-types/phase0";
-import {toHexString} from "@chainsafe/ssz";
 
 export default function App(): JSX.Element {
   const [beaconApiUrl, setBeaconApiUrl] = useState("https://altair-devnet-3.lodestar.casa");
   const [checkpointStr, setCheckpointStr] = useState("<root>:<epoch>");
   const [reqStatusInit, setReqStatusInit] = useState<ReqStatus<Lightclient, string>>({});
+  const [localAvailable, setLocalAvailable] = useState(false);
 
   useEffect(() => {
     init("herumi").catch((e) => {
@@ -28,24 +28,35 @@ export default function App(): JSX.Element {
     });
   }, []);
 
+  // Check if local snapshot is available
+  useEffect(() => {
+    setLocalAvailable(hasSnapshot());
+  }, [reqStatusInit.result]);
+
   async function fetchConfig(): Promise<IChainForkConfig> {
     const client = getClient(configLeve, {baseUrl: beaconApiUrl});
     const {data} = await client.config.getSpec();
     return createIChainForkConfig(data);
   }
 
+  async function fetchGenesisTime(): Promise<number> {
+    const client = getClient(configLeve, {baseUrl: beaconApiUrl});
+    const {data: genesis} = await client.beacon.getGenesis();
+    return Number(genesis.genesisTime);
+  }
+
   async function initializeFromLocalSnapshot() {
     try {
-      // TODO: Fetch from snapshot
-      const genesisTime = 1620648600;
-
-      const config = await fetchConfig();
-      const clock = new Clock(config, genesisTime);
       // Check if there is state persisted
       const prevSnapshot = readSnapshot();
       if (!prevSnapshot) {
         throw Error("No snapshot stored locally");
       }
+
+      const genesisTime = readGenesisTime() ?? (await fetchGenesisTime());
+
+      const config = await fetchConfig();
+      const clock = new Clock(config, genesisTime);
 
       setReqStatusInit({
         loading: `Restoring prevSnapshot at slot ${prevSnapshot.header.slot}`,
@@ -98,14 +109,17 @@ export default function App(): JSX.Element {
     }
   }
 
-  async function initializeFromTrustedNode() {
+  async function fillCheckpointFromNode() {
     try {
-      setReqStatusInit({loading: "Initializing from trusted node"});
+      setReqStatusInit({loading: "Fetching checkpoint from trusted node"});
 
       const client = getClient(configLeve, {baseUrl: beaconApiUrl});
       const res = await client.beacon.getStateFinalityCheckpoints("head");
       const finalizedCheckpoint = res.data.finalized;
-      await initializeFromCheckpoint(finalizedCheckpoint);
+      setCheckpointStr(toCheckpointStr(finalizedCheckpoint));
+
+      // Hasn't load clint, just disable loader
+      setReqStatusInit({});
     } catch (e) {
       e.message = `Error initializing from trusted node: ${e.message}`;
       setReqStatusInit({error: e});
@@ -113,11 +127,25 @@ export default function App(): JSX.Element {
     }
   }
 
+  function deleteState() {
+    deleteSnapshot();
+    setReqStatusInit({});
+  }
+
   return (
     <>
-      <Header />
-
       <main>
+        <section className="hero">
+          <h1>
+            Ethereum consensus <br></br> Lodestar light-client demo
+          </h1>
+
+          <p>
+            Showcase of a REST-based Ethereum consensus light-client. Initialize from a trusted checkpoint or node, sync
+            to lastest finalized state and request proofs
+          </p>
+        </section>
+
         <section>
           <div className="field">
             <div className="control">
@@ -126,36 +154,49 @@ export default function App(): JSX.Element {
             </div>
           </div>
 
-          <div className="field">
-            <div className="control">
-              <p>Trusted checkpoint</p>
-              <input value={checkpointStr} onChange={(e) => setCheckpointStr(e.target.value)} />
-            </div>
-          </div>
+          <br></br>
 
-          <div className="field">
-            <div className="control">
-              <button className="strong-gradient" onClick={() => initializeFromCheckpointStr(checkpointStr)}>
-                Initialize from trusted checkpoint
-              </button>
-            </div>
-          </div>
+          {!reqStatusInit.result ? (
+            <>
+              <div>
+                <div className="field trusted-checkpoint">
+                  <div className="control">
+                    <p>Trusted checkpoint</p>
+                    <input value={checkpointStr} onChange={(e) => setCheckpointStr(e.target.value)} />
+                    <button className="strong-gradient" onClick={fillCheckpointFromNode}>
+                      Trust node
+                    </button>
+                  </div>
+                </div>
 
-          <div className="field">
-            <div className="control">
-              <button className="strong-gradient" onClick={initializeFromTrustedNode}>
-                Initialize from trusted node
-              </button>
-            </div>
-          </div>
+                <div className="field">
+                  <div className="control">
+                    <button className="strong-gradient" onClick={() => initializeFromCheckpointStr(checkpointStr)}>
+                      Initialize from trusted checkpoint
+                    </button>
+                  </div>
+                </div>
 
-          <div className="field">
-            <div className="control">
-              <button className="strong-gradient" onClick={initializeFromLocalSnapshot}>
-                Initialize from local snaphost
-              </button>
+                {localAvailable && (
+                  <div className="field">
+                    <div className="control">
+                      <button className="strong-gradient" onClick={initializeFromLocalSnapshot}>
+                        Initialize from local snapshot
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="field">
+              <div className="control">
+                <button className="strong-gradient" onClick={deleteState}>
+                  Delete state
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </section>
 
         {reqStatusInit.result ? (
@@ -167,11 +208,18 @@ export default function App(): JSX.Element {
         ) : reqStatusInit.error ? (
           <ErrorView error={reqStatusInit.error} />
         ) : reqStatusInit.loading ? (
-          <p>Initializing Lightclient - {reqStatusInit.loading}</p>
+          <>
+            <Loader></Loader>
+            <p>Initializing light-client - {reqStatusInit.loading}</p>
+          </>
         ) : null}
       </main>
 
       <Footer />
     </>
   );
+}
+
+function toCheckpointStr(checkpoint: Checkpoint): string {
+  return `${toHexString(checkpoint.root)}:${checkpoint.epoch}`;
 }

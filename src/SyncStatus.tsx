@@ -6,7 +6,7 @@ import {altair} from "@chainsafe/lodestar-types";
 import {toHexString} from "@chainsafe/ssz";
 import {ErrorView} from "./components/ErrorView";
 import {ReqStatus} from "./types";
-import {writeSnapshot} from "./storage";
+import {writeGenesisTime, writeSnapshot} from "./storage";
 
 export function SyncStatus({client}: {client: Lightclient}): JSX.Element {
   const [header, setHeader] = useState<altair.BeaconBlockHeader>();
@@ -18,6 +18,9 @@ export function SyncStatus({client}: {client: Lightclient}): JSX.Element {
       await client.sync();
       await client.syncToLatest();
       setReqStatusSync({result: true});
+      // Persist once after first sync
+      writeSnapshot(client.getSnapshot());
+      writeGenesisTime(client.clock.genesisTime);
     } catch (e) {
       setReqStatusSync({error: e});
       console.error(e);

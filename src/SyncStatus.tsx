@@ -8,6 +8,7 @@ import {ErrorView} from "./components/ErrorView";
 import {ReqStatus} from "./types";
 import {writeGenesisTime, writeSnapshot} from "./storage";
 
+const NOT_SUFFICIENT_PARTICIPANTS = "Sync committee has not sufficient participants";
 export function SyncStatus({client}: {client: Lightclient}): JSX.Element {
   const [header, setHeader] = useState<altair.BeaconBlockHeader>();
   const [reqStatusSync, setReqStatusSync] = useState<ReqStatus>({});
@@ -64,7 +65,14 @@ export function SyncStatus({client}: {client: Lightclient}): JSX.Element {
       {reqStatusSync.result ? (
         <p>Successfully synced!</p>
       ) : reqStatusSync.error ? (
-        <ErrorView error={reqStatusSync.error} />
+        reqStatusSync.error.message === NOT_SUFFICIENT_PARTICIPANTS ? (
+          // If a single slot syncAggregate has not participants it will show as an error
+          // This is not technically a big problem, just that the lightclient will lag one slot behind.
+          // Show a non-red message, indicating that the severity is not as high as an actual error.
+          <p className="yellow">Skipped empty sync aggregate</p>
+        ) : (
+          <ErrorView error={reqStatusSync.error} />
+        )
       ) : reqStatusSync.loading ? (
         <p>Syncing Lightclient...</p>
       ) : null}

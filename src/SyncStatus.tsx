@@ -16,10 +16,13 @@ export function SyncStatus({client}: {client: Lightclient}): JSX.Element {
   const sync = useCallback(async () => {
     try {
       setReqStatusSync({loading: true});
+
+      // Will only do sync of period updates if the clock shows that the period has advanced
       await client.sync();
+
       await client.syncToLatest();
       setReqStatusSync({result: true});
-      // Persist once after first sync
+      // Persist after sync
       writeSnapshot(client.getSnapshot());
       writeGenesisTime(client.clock.genesisTime);
     } catch (e) {
@@ -33,7 +36,7 @@ export function SyncStatus({client}: {client: Lightclient}): JSX.Element {
     sync();
   }, [sync]);
 
-  // Sync every epoch
+  // Sync every slot
   useEffect(() => {
     const interval = setInterval(sync, client.config.SECONDS_PER_SLOT * 1000);
     return () => clearInterval(interval);

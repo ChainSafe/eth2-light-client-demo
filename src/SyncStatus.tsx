@@ -8,6 +8,7 @@ import {ErrorView} from "./components/ErrorView";
 import {ReqStatus} from "./types";
 import {writeGenesisTime, writeSnapshot} from "./storage";
 
+const NOT_SUFFICIENT_PARTICIPANTS = "Sync committee has not sufficient participants";
 export function SyncStatus({client}: {client: Lightclient}): JSX.Element {
   const [header, setHeader] = useState<altair.BeaconBlockHeader>();
   const [reqStatusSync, setReqStatusSync] = useState<ReqStatus>({});
@@ -15,10 +16,13 @@ export function SyncStatus({client}: {client: Lightclient}): JSX.Element {
   const sync = useCallback(async () => {
     try {
       setReqStatusSync({loading: true});
+
+      // Will only do sync of period updates if the clock shows that the period has advanced
       await client.sync();
+
       await client.syncToLatest();
       setReqStatusSync({result: true});
-      // Persist once after first sync
+      // Persist after sync
       writeSnapshot(client.getSnapshot());
       writeGenesisTime(client.clock.genesisTime);
     } catch (e) {
@@ -32,7 +36,7 @@ export function SyncStatus({client}: {client: Lightclient}): JSX.Element {
     sync();
   }, [sync]);
 
-  // Sync every epoch
+  // Sync every slot
   useEffect(() => {
     const interval = setInterval(sync, client.config.SECONDS_PER_SLOT * 1000);
     return () => clearInterval(interval);
@@ -64,7 +68,14 @@ export function SyncStatus({client}: {client: Lightclient}): JSX.Element {
       {reqStatusSync.result ? (
         <p>Successfully synced!</p>
       ) : reqStatusSync.error ? (
-        <ErrorView error={reqStatusSync.error} />
+        reqStatusSync.error.message === NOT_SUFFICIENT_PARTICIPANTS ? (
+          // If a single slot syncAggregate has not participants it will show as an error
+          // This is not technically a big problem, just that the lightclient will lag one slot behind.
+          // Show a non-red message, indicating that the severity is not as high as an actual error.
+          <p className="yellow">Skipped empty sync aggregate</p>
+        ) : (
+          <ErrorView error={reqStatusSync.error} />
+        )
       ) : reqStatusSync.loading ? (
         <p>Syncing Lightclient...</p>
       ) : null}

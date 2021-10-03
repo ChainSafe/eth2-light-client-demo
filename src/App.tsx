@@ -17,7 +17,7 @@ import {readGenesisTime, readSnapshot, hasSnapshot, deleteSnapshot} from "./stor
 import {configLeve, genesisValidatorsRoot} from "./config";
 
 export default function App(): JSX.Element {
-  const [beaconApiUrl, setBeaconApiUrl] = useState("https://altair-devnet-3.lodestar.casa");
+  const [beaconApiUrl, setBeaconApiUrl] = useState("https://prater.lodestar.casa");
   const [checkpointStr, setCheckpointStr] = useState("<root>:<epoch>");
   const [reqStatusInit, setReqStatusInit] = useState<ReqStatus<Lightclient, string>>({});
   const [localAvailable, setLocalAvailable] = useState(false);

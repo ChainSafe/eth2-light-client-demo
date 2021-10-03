@@ -5,7 +5,9 @@ import {Clock} from "@chainsafe/lodestar-light-client/lib/utils/clock";
 import {init} from "@chainsafe/bls";
 import {fromHexString, toHexString} from "@chainsafe/ssz";
 import {Checkpoint} from "@chainsafe/lodestar-types/phase0";
+import {Root} from "@chainsafe/lodestar-types";
 import {createIChainForkConfig, IChainForkConfig} from "@chainsafe/lodestar-config";
+import {config as configDefault} from "@chainsafe/lodestar-config/default";
 import Footer from "./components/Footer";
 import {ErrorView} from "./components/ErrorView";
 import {Loader} from "./components/Loader";
@@ -13,8 +15,7 @@ import {SyncStatus} from "./SyncStatus";
 import {TimeMonitor} from "./TimeMonitor";
 import {ProofReqResp} from "./ProofReqResp";
 import {ReqStatus} from "./types";
-import {readGenesisTime, readSnapshot, hasSnapshot, deleteSnapshot} from "./storage";
-import {configLeve, genesisValidatorsRoot} from "./config";
+import {readGenesisTime, readSnapshot, hasSnapshot, deleteSnapshot, readGenesisValidatorsRoot} from "./storage";
 
 export default function App(): JSX.Element {
   const [beaconApiUrl, setBeaconApiUrl] = useState("https://prater.lodestar.casa");
@@ -34,15 +35,21 @@ export default function App(): JSX.Element {
   }, [reqStatusInit.result]);
 
   async function fetchConfig(): Promise<IChainForkConfig> {
-    const client = getClient(configLeve, {baseUrl: beaconApiUrl});
+    const client = getClient(configDefault, {baseUrl: beaconApiUrl});
     const {data} = await client.config.getSpec();
     return createIChainForkConfig(data);
   }
 
   async function fetchGenesisTime(): Promise<number> {
-    const client = getClient(configLeve, {baseUrl: beaconApiUrl});
+    const client = getClient(configDefault, {baseUrl: beaconApiUrl});
     const {data: genesis} = await client.beacon.getGenesis();
     return Number(genesis.genesisTime);
+  }
+
+  async function fetchGenesisValidatorsRoot(): Promise<Root> {
+    const client = getClient(configDefault, {baseUrl: beaconApiUrl});
+    const {data: genesis} = await client.beacon.getGenesis();
+    return genesis.genesisValidatorsRoot;
   }
 
   async function initializeFromLocalSnapshot() {
@@ -54,6 +61,7 @@ export default function App(): JSX.Element {
       }
 
       const genesisTime = readGenesisTime() ?? (await fetchGenesisTime());
+      const genesisValidatorsRoot = readGenesisValidatorsRoot() ?? (await fetchGenesisValidatorsRoot());
 
       const config = await fetchConfig();
       const clock = new Clock(config, genesisTime);
@@ -68,7 +76,7 @@ export default function App(): JSX.Element {
       );
       setReqStatusInit({result: client});
     } catch (e) {
-      setReqStatusInit({error: e});
+      setReqStatusInit({error: e as Error});
       console.error(e);
     }
   }
@@ -88,8 +96,8 @@ export default function App(): JSX.Element {
 
       await initializeFromCheckpoint({root, epoch});
     } catch (e) {
-      e.message = `Error initializing from trusted checkpoint ${checkpointStr}: ${e.message}`;
-      setReqStatusInit({error: e});
+      (e as Error).message = `Error initializing from trusted checkpoint ${checkpointStr}: ${(e as Error).message}`;
+      setReqStatusInit({error: e as Error});
       console.error(e);
     }
   }
@@ -103,8 +111,8 @@ export default function App(): JSX.Element {
       const client = await Lightclient.initializeFromCheckpoint(config, beaconApiUrl, checkpoint);
       setReqStatusInit({result: client});
     } catch (e) {
-      e.message = `Error initializing from trusted checkpoint ${checkpointId}: ${e.message}`;
-      setReqStatusInit({error: e});
+      (e as Error).message = `Error initializing from trusted checkpoint ${checkpointId}: ${(e as Error).message}`;
+      setReqStatusInit({error: e as Error});
       console.error(e);
     }
   }
@@ -113,7 +121,7 @@ export default function App(): JSX.Element {
     try {
       setReqStatusInit({loading: "Fetching checkpoint from trusted node"});
 
-      const client = getClient(configLeve, {baseUrl: beaconApiUrl});
+      const client = getClient(configDefault, {baseUrl: beaconApiUrl});
       const res = await client.beacon.getStateFinalityCheckpoints("head");
       const finalizedCheckpoint = res.data.finalized;
       setCheckpointStr(toCheckpointStr(finalizedCheckpoint));
@@ -121,8 +129,8 @@ export default function App(): JSX.Element {
       // Hasn't load clint, just disable loader
       setReqStatusInit({});
     } catch (e) {
-      e.message = `Error initializing from trusted node: ${e.message}`;
-      setReqStatusInit({error: e});
+      (e as Error).message = `Error initializing from trusted node: ${(e as Error).message}`;
+      setReqStatusInit({error: e as Error});
       console.error(e);
     }
   }

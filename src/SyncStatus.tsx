@@ -2,7 +2,7 @@ import React, {useEffect, useState, useCallback} from "react";
 import {debounce} from "debounce";
 import {Lightclient, LightclientEvent} from "@chainsafe/lodestar-light-client/lib/client";
 import {computeSyncPeriodAtSlot} from "@chainsafe/lodestar-light-client/lib/utils/syncPeriod";
-import {altair} from "@chainsafe/lodestar-types";
+import {phase0} from "@chainsafe/lodestar-types";
 import {toHexString} from "@chainsafe/ssz";
 import {ErrorView} from "./components/ErrorView";
 import {ReqStatus} from "./types";
@@ -10,7 +10,7 @@ import {writeGenesisTime, writeSnapshot} from "./storage";
 
 const NOT_SUFFICIENT_PARTICIPANTS = "Sync committee has not sufficient participants";
 export function SyncStatus({client}: {client: Lightclient}): JSX.Element {
-  const [header, setHeader] = useState<altair.BeaconBlockHeader>();
+  const [header, setHeader] = useState<phase0.BeaconBlockHeader>();
   const [reqStatusSync, setReqStatusSync] = useState<ReqStatus>({});
 
   const sync = useCallback(async () => {
@@ -44,7 +44,7 @@ export function SyncStatus({client}: {client: Lightclient}): JSX.Element {
 
   // Subscribe to update head events
   useEffect(() => {
-    const onNewHeader = (newHeader: altair.BeaconBlockHeader): void => setHeader(newHeader);
+    const onNewHeader = (newHeader: phase0.BeaconBlockHeader): void => setHeader(newHeader);
     client.emitter.on(LightclientEvent.newHeader, onNewHeader);
     return () => client.emitter.off(LightclientEvent.newHeader, onNewHeader);
   }, [client, setHeader]);

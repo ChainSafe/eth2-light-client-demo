@@ -1,9 +1,11 @@
-import {altair, ssz} from "@chainsafe/lodestar-types";
+import {altair, Root, ssz} from "@chainsafe/lodestar-types";
+import {fromHexString, toHexString} from "@chainsafe/ssz";
 
 /* eslint-disable no-console */
 
 const snapshotKey = "snapshot-json";
 const genesisTimeKey = "genesis-time";
+const genesisValidatorsRootKey = "genesis-validators-root";
 
 export function hasSnapshot(): boolean {
   return snapshotKey in localStorage;
@@ -12,6 +14,7 @@ export function hasSnapshot(): boolean {
 export function deleteSnapshot(): void {
   localStorage.removeItem(snapshotKey);
   localStorage.removeItem(genesisTimeKey);
+  localStorage.removeItem(genesisValidatorsRootKey);
 }
 
 export function readSnapshot(): altair.LightClientSnapshot | null {
@@ -39,4 +42,14 @@ export function readGenesisTime(): number | null {
 
 export function writeGenesisTime(genesisTime: number): void {
   localStorage.setItem(genesisTimeKey, String(genesisTime));
+}
+
+export function readGenesisValidatorsRoot(): Root | null {
+  const str = localStorage.getItem(genesisValidatorsRootKey);
+  if (!str) return null;
+  return fromHexString(str);
+}
+
+export function writeGenesisValidatorsRoot(root: Root): void {
+  localStorage.setItem(genesisValidatorsRootKey, toHexString(root));
 }

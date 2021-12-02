@@ -17,6 +17,7 @@ import {readSnapshot, hasSnapshot, deleteSnapshot} from "./storage";
 import {phase0, SyncPeriod} from "@chainsafe/lodestar-types";
 import {networkGenesis} from "@chainsafe/lodestar-light-client/lib/networks";
 import {networksChainConfig} from "@chainsafe/lodestar-config/networks";
+import {computeSyncPeriodAtSlot} from "@chainsafe/lodestar-light-client/lib/utils/clock";
 
 function getNetworkData(network: string) {
   if (network === "mainnet") {
@@ -99,6 +100,10 @@ export default function App(): JSX.Element {
         checkpointRoot: fromHexString("0x9f810339d6c30bf360b531b1bfb7c9a80dbbd4caa54c7bb1b98e44752c07ea98"),
       });
       setReqStatusInit({result: client});
+
+      const head = client.getHead();
+      setHead(head);
+      setLatestSyncedPeriod(computeSyncPeriodAtSlot(head.slot));
     } catch (e) {
       setReqStatusInit({error: e as Error});
       console.error(e);
@@ -230,9 +235,8 @@ export default function App(): JSX.Element {
           <>
             <TimeMonitor client={reqStatusInit.result} />
 
-            {latestSyncedPeriod !== undefined && (
-              <SyncStatus client={reqStatusInit.result} head={head} latestSyncedPeriod={latestSyncedPeriod} />
-            )}
+            <SyncStatus client={reqStatusInit.result} head={head} latestSyncedPeriod={latestSyncedPeriod} />
+
             {head !== undefined && <ProofReqResp client={reqStatusInit.result} head={head} />}
           </>
         ) : reqStatusInit.error ? (

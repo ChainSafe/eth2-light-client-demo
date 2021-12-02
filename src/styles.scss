@@ -233,4 +233,15 @@ section > .field:not(:last-child) {
   .show-proof-toggle {
     opacity: 0.5;
   }
+
+  textarea {
+    border-radius: 6px;
+  }
+}
+
+.alert-warning {
+  padding: 0.5rem;
+  border: 1px solid #ffd20040;
+  background-color: #ffd2001c;
+  border-radius: 0.25rem;
 }

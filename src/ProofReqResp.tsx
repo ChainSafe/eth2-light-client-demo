@@ -55,7 +55,7 @@ export function ProofReqResp({client, head}: {client: Lightclient; head: phase0.
           <h3>Paths</h3>
           <div className="field">
             <div className="control">
-              <textarea className="textarea" rows={6} value={pathsStr} onChange={(evt) => setPaths(evt.target.value)} />
+              <textarea className="textarea" rows={5} value={pathsStr} onChange={(evt) => setPaths(evt.target.value)} />
             </div>
           </div>
         </div>
@@ -99,8 +99,10 @@ export function ProofReqResp({client, head}: {client: Lightclient; head: phase0.
           <p>Fetching proof...</p>
         ) : null}
 
-        {client.currentSlot - head.slot < SLOT_DIFF_TO_FETCH && (
-          <div>Head is {client.currentSlot - head.slot} slots behind the clock. Head state may not be available</div>
+        {client.currentSlot - head.slot >= SLOT_DIFF_TO_FETCH && (
+          <div className="alert-warning">
+            Head is {client.currentSlot - head.slot} slots behind the clock. Head state may not be available
+          </div>
         )}
       </div>
     </section>

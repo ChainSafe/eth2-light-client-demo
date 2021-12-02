@@ -1,12 +1,10 @@
 import React, {useEffect, useState} from "react";
 import {getClient} from "@chainsafe/lodestar-api";
-import {Lightclient} from "@chainsafe/lodestar-light-client/lib/client";
-import {Clock} from "@chainsafe/lodestar-light-client/lib/utils/clock";
+import {Lightclient, LightclientEvent} from "@chainsafe/lodestar-light-client";
 import {init} from "@chainsafe/bls";
 import {fromHexString, toHexString} from "@chainsafe/ssz";
 import {Checkpoint} from "@chainsafe/lodestar-types/phase0";
-import {Root} from "@chainsafe/lodestar-types";
-import {createIChainForkConfig, IChainForkConfig} from "@chainsafe/lodestar-config";
+import {createIChainForkConfig} from "@chainsafe/lodestar-config";
 import {config as configDefault} from "@chainsafe/lodestar-config/default";
 import Footer from "./components/Footer";
 import {ErrorView} from "./components/ErrorView";
@@ -15,13 +13,35 @@ import {SyncStatus} from "./SyncStatus";
 import {TimeMonitor} from "./TimeMonitor";
 import {ProofReqResp} from "./ProofReqResp";
 import {ReqStatus} from "./types";
-import {readGenesisTime, readSnapshot, hasSnapshot, deleteSnapshot, readGenesisValidatorsRoot} from "./storage";
+import {readSnapshot, hasSnapshot, deleteSnapshot} from "./storage";
+import {phase0, SyncPeriod} from "@chainsafe/lodestar-types";
+import {networkGenesis} from "@chainsafe/lodestar-light-client/lib/networks";
+import {networksChainConfig} from "@chainsafe/lodestar-config/networks";
+
+function getNetworkData(network: string) {
+  if (network === "mainnet") {
+    return {
+      genesisData: networkGenesis.mainnet,
+      chainConfig: networksChainConfig.mainnet,
+    };
+  } else if (network === "prater") {
+    return {
+      genesisData: networkGenesis.prater,
+      chainConfig: networksChainConfig.prater,
+    };
+  } else {
+    throw Error(`Unknown network: ${network}`);
+  }
+}
 
 export default function App(): JSX.Element {
+  const [network, setNetwork] = useState("prater");
   const [beaconApiUrl, setBeaconApiUrl] = useState("https://prater.lodestar.casa");
-  const [checkpointStr, setCheckpointStr] = useState("<root>:<epoch>");
+  const [checkpointRootStr, setCheckpointRootStr] = useState("0xaabb...");
   const [reqStatusInit, setReqStatusInit] = useState<ReqStatus<Lightclient, string>>({});
   const [localAvailable, setLocalAvailable] = useState(false);
+  const [head, setHead] = useState<phase0.BeaconBlockHeader>();
+  const [latestSyncedPeriod, setLatestSyncedPeriod] = useState<number>();
 
   useEffect(() => {
     init("herumi").catch((e) => {
@@ -34,23 +54,28 @@ export default function App(): JSX.Element {
     setLocalAvailable(hasSnapshot());
   }, [reqStatusInit.result]);
 
-  async function fetchConfig(): Promise<IChainForkConfig> {
-    const client = getClient(configDefault, {baseUrl: beaconApiUrl});
-    const {data} = await client.config.getSpec();
-    return createIChainForkConfig(data);
-  }
+  useEffect(() => {
+    const client = reqStatusInit.result;
+    if (!client) return;
 
-  async function fetchGenesisTime(): Promise<number> {
-    const client = getClient(configDefault, {baseUrl: beaconApiUrl});
-    const {data: genesis} = await client.beacon.getGenesis();
-    return Number(genesis.genesisTime);
-  }
+    client.start();
 
-  async function fetchGenesisValidatorsRoot(): Promise<Root> {
-    const client = getClient(configDefault, {baseUrl: beaconApiUrl});
-    const {data: genesis} = await client.beacon.getGenesis();
-    return genesis.genesisValidatorsRoot;
-  }
+    function onNewHead(newHeader: phase0.BeaconBlockHeader) {
+      setHead(newHeader);
+    }
+
+    function onNewCommittee(period: SyncPeriod) {
+      setLatestSyncedPeriod(period);
+    }
+
+    client.emitter.on(LightclientEvent.head, onNewHead);
+    client.emitter.on(LightclientEvent.committee, onNewCommittee);
+
+    return function () {
+      client.emitter.off(LightclientEvent.head, onNewHead);
+      client.emitter.off(LightclientEvent.committee, onNewCommittee);
+    };
+  }, [reqStatusInit.result]);
 
   async function initializeFromLocalSnapshot() {
     try {
@@ -60,20 +85,19 @@ export default function App(): JSX.Element {
         throw Error("No snapshot stored locally");
       }
 
-      const genesisTime = readGenesisTime() ?? (await fetchGenesisTime());
-      const genesisValidatorsRoot = readGenesisValidatorsRoot() ?? (await fetchGenesisValidatorsRoot());
-
-      const config = await fetchConfig();
-      const clock = new Clock(config, genesisTime);
+      const {genesisData, chainConfig} = getNetworkData(network);
+      const config = createIChainForkConfig(chainConfig);
 
       setReqStatusInit({
         loading: `Restoring prevSnapshot at slot ${prevSnapshot.header.slot}`,
       });
 
-      const client = Lightclient.initializeFromTrustedSnapshot(
-        {config, clock, genesisValidatorsRoot, beaconApiUrl},
-        prevSnapshot
-      );
+      const client = await Lightclient.initializeFromCheckpointRoot({
+        config,
+        beaconApiUrl,
+        genesisData,
+        checkpointRoot: fromHexString("0x9f810339d6c30bf360b531b1bfb7c9a80dbbd4caa54c7bb1b98e44752c07ea98"),
+      });
       setReqStatusInit({result: client});
     } catch (e) {
       setReqStatusInit({error: e as Error});
@@ -81,37 +105,32 @@ export default function App(): JSX.Element {
     }
   }
 
-  async function initializeFromCheckpointStr(checkpointStr: string) {
+  async function initializeFromCheckpointStr(checkpointRootHex: string) {
     try {
-      const [rootStr, epochStr] = checkpointStr.split(":");
-
       // Validate root
-      if (!rootStr.startsWith("0x")) throw Error(`Root must start with 0x`);
-      const root = fromHexString(rootStr);
-      if (root.length !== 32) throw Error(`Root must be 32 bytes long: ${root.length}`);
+      if (!checkpointRootHex.startsWith("0x")) {
+        throw Error(`Root must start with 0x`);
+      }
+      const checkpointRoot = fromHexString(checkpointRootHex);
+      if (checkpointRoot.length !== 32) {
+        throw Error(`Root must be 32 bytes long: ${checkpointRoot.length}`);
+      }
 
-      // Validate epoch
-      const epoch = parseInt(epochStr, 10);
-      if (isNaN(epoch)) throw Error(`Epoch is not a number: ${epoch}`);
+      setReqStatusInit({loading: `Syncing from trusted checkpoint: ${checkpointRootHex}`});
 
-      await initializeFromCheckpoint({root, epoch});
-    } catch (e) {
-      (e as Error).message = `Error initializing from trusted checkpoint ${checkpointStr}: ${(e as Error).message}`;
-      setReqStatusInit({error: e as Error});
-      console.error(e);
-    }
-  }
+      const {genesisData, chainConfig} = getNetworkData(network);
+      const config = createIChainForkConfig(chainConfig);
 
-  async function initializeFromCheckpoint(checkpoint: Checkpoint) {
-    const checkpointId = `${toHexString(checkpoint.root)}:${checkpoint.epoch}`;
-    try {
-      setReqStatusInit({loading: `Syncing from trusted checkpoint: ${checkpointId}`});
+      const client = await Lightclient.initializeFromCheckpointRoot({
+        config,
+        beaconApiUrl,
+        genesisData,
+        checkpointRoot,
+      });
 
-      const config = await fetchConfig();
-      const client = await Lightclient.initializeFromCheckpoint(config, beaconApiUrl, checkpoint);
       setReqStatusInit({result: client});
     } catch (e) {
-      (e as Error).message = `Error initializing from trusted checkpoint ${checkpointId}: ${(e as Error).message}`;
+      (e as Error).message = `Error initializing from trusted checkpoint ${checkpointRootHex}: ${(e as Error).message}`;
       setReqStatusInit({error: e as Error});
       console.error(e);
     }
@@ -124,7 +143,7 @@ export default function App(): JSX.Element {
       const client = getClient(configDefault, {baseUrl: beaconApiUrl});
       const res = await client.beacon.getStateFinalityCheckpoints("head");
       const finalizedCheckpoint = res.data.finalized;
-      setCheckpointStr(toCheckpointStr(finalizedCheckpoint));
+      setCheckpointRootStr(toCheckpointStr(finalizedCheckpoint));
 
       // Hasn't load clint, just disable loader
       setReqStatusInit({});
@@ -170,7 +189,7 @@ export default function App(): JSX.Element {
                 <div className="field trusted-checkpoint">
                   <div className="control">
                     <p>Trusted checkpoint</p>
-                    <input value={checkpointStr} onChange={(e) => setCheckpointStr(e.target.value)} />
+                    <input value={checkpointRootStr} onChange={(e) => setCheckpointRootStr(e.target.value)} />
                     <button className="dark" onClick={fillCheckpointFromNode}>
                       Trust node
                     </button>
@@ -179,8 +198,8 @@ export default function App(): JSX.Element {
 
                 <div className="field">
                   <div className="control">
-                    <button className="strong-gradient" onClick={() => initializeFromCheckpointStr(checkpointStr)}>
-                      Initialize from trusted checkpoint
+                    <button className="strong-gradient" onClick={() => initializeFromCheckpointStr(checkpointRootStr)}>
+                      Initialize from trusted checkpoint root
                     </button>
                   </div>
                 </div>
@@ -210,8 +229,11 @@ export default function App(): JSX.Element {
         {reqStatusInit.result ? (
           <>
             <TimeMonitor client={reqStatusInit.result} />
-            <SyncStatus client={reqStatusInit.result} />
-            <ProofReqResp client={reqStatusInit.result} />
+
+            {latestSyncedPeriod !== undefined && (
+              <SyncStatus client={reqStatusInit.result} head={head} latestSyncedPeriod={latestSyncedPeriod} />
+            )}
+            {head !== undefined && <ProofReqResp client={reqStatusInit.result} head={head} />}
           </>
         ) : reqStatusInit.error ? (
           <ErrorView error={reqStatusInit.error} />

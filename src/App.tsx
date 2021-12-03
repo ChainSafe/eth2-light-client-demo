@@ -49,7 +49,7 @@ function getNetworkUrl(network: string) {
 export default function App(): JSX.Element {
   const [network, setNetwork] = useState(networkDefault);
   const [beaconApiUrl, setBeaconApiUrl] = useState(getNetworkUrl(networkDefault));
-  const [checkpointRootStr, setCheckpointRootStr] = useState("0xaabb...");
+  const [checkpointRootStr, setCheckpointRootStr] = useState("");
   const [reqStatusInit, setReqStatusInit] = useState<ReqStatus<Lightclient, string>>({});
   const [localAvailable, setLocalAvailable] = useState(false);
   const [head, setHead] = useState<phase0.BeaconBlockHeader>();
@@ -219,7 +219,11 @@ export default function App(): JSX.Element {
                 <div className="field trusted-checkpoint">
                   <div className="control">
                     <p>Trusted checkpoint</p>
-                    <input value={checkpointRootStr} onChange={(e) => setCheckpointRootStr(e.target.value)} />
+                    <input
+                      value={checkpointRootStr}
+                      onChange={(e) => setCheckpointRootStr(e.target.value)}
+                      placeholder="0xaabb..."
+                    />
                     <button className="dark" onClick={fillCheckpointFromNode}>
                       Trust node
                     </button>

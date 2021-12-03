@@ -221,15 +221,17 @@ export default function App(): JSX.Element {
               <div>
                 <div className="field trusted-checkpoint">
                   <div className="control">
-                    <p>Trusted checkpoint</p>
+                    <p>
+                      Trusted checkpoint{" "}
+                      <span className="fill-latest-finalized" onClick={fillCheckpointFromNode}>
+                        (Fill with latest finalized)
+                      </span>
+                    </p>
                     <input
                       value={checkpointRootStr}
                       onChange={(e) => setCheckpointRootStr(e.target.value)}
                       placeholder="0xaabb..."
                     />
-                    <button className="dark" onClick={fillCheckpointFromNode}>
-                      Trust node
-                    </button>
                   </div>
                 </div>
 

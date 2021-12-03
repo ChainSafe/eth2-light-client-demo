@@ -191,8 +191,8 @@ export default function App(): JSX.Element {
           </h1>
 
           <p>
-            Showcase of a REST-based Ethereum consensus light-client. Initialize from a trusted checkpoint or node, sync
-            to lastest finalized state and request proofs
+            Showcase of a REST-based Ethereum consensus light-client. Initialize from a trusted checkpoint, sync to the
+            head and request proofs
           </p>
         </section>
 

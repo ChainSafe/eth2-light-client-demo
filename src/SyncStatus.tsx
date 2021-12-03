@@ -18,7 +18,7 @@ export function SyncStatus({
       <h2>Sync Status</h2>
       <div className="grid-2col-render">
         <div>Latest sync period: {latestSyncedPeriod ?? "-"}</div>
-        <div>Clock sync period: {computeSyncPeriodAtSlot(client.currentSlot)}</div>
+        <div>Clock sync period: {computeSyncPeriodAtSlot(client.config, client.currentSlot)}</div>
       </div>
 
       <h3>Latest Synced Snapshot Header</h3>

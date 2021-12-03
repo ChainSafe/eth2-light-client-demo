@@ -118,7 +118,7 @@ export default function App(): JSX.Element {
 
       const head = client.getHead();
       setHead(head);
-      setLatestSyncedPeriod(computeSyncPeriodAtSlot(head.slot));
+      setLatestSyncedPeriod(computeSyncPeriodAtSlot(client.config, head.slot));
     } catch (e) {
       setReqStatusInit({error: e as Error});
       console.error(e);

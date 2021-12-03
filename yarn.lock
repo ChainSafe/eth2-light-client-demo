@@ -1192,67 +1192,67 @@
     bls-eth-wasm "^0.4.8"
     randombytes "^2.1.0"
 
-"@chainsafe/lodestar-api@^0.32.1-dev.13+be50e4e21":
-  version "0.32.1-dev.13"
-  resolved "https://registry.yarnpkg.com/@chainsafe/lodestar-api/-/lodestar-api-0.32.1-dev.13.tgz#a127a2b2bce6c34bd9a44380cae543b08d914ca3"
-  integrity sha512-haonFj2KfDqv9jKHuoLPcoXqWdZriUG1IP8c7hZuvArD3ChfR5u8wzvXlN3L94FpEpR9hOb2QQCMOArwfIDREg==
+"@chainsafe/lodestar-api@^0.32.1-dev.18+22c2667d5":
+  version "0.32.1-dev.18"
+  resolved "https://registry.yarnpkg.com/@chainsafe/lodestar-api/-/lodestar-api-0.32.1-dev.18.tgz#471c330be6d63eb5ee6ae131754f0f188b4794db"
+  integrity sha512-zwK9qbBkLE00W26EtF8NCklEls82AsxYcOF437NW8VLwl0N78WR3tdYk2q7oVR7cZtRTo4JroRIQ1+HRad6KGg==
   dependencies:
     "@chainsafe/abort-controller" "^3.0.1"
-    "@chainsafe/lodestar-config" "^0.32.1-dev.13+be50e4e21"
-    "@chainsafe/lodestar-params" "^0.32.1-dev.13+be50e4e21"
-    "@chainsafe/lodestar-types" "^0.32.1-dev.13+be50e4e21"
-    "@chainsafe/lodestar-utils" "^0.32.1-dev.13+be50e4e21"
+    "@chainsafe/lodestar-config" "^0.32.1-dev.18+22c2667d5"
+    "@chainsafe/lodestar-params" "^0.32.1-dev.18+22c2667d5"
+    "@chainsafe/lodestar-types" "^0.32.1-dev.18+22c2667d5"
+    "@chainsafe/lodestar-utils" "^0.32.1-dev.18+22c2667d5"
     "@chainsafe/persistent-merkle-tree" "^0.3.7"
     "@chainsafe/ssz" "^0.8.20"
     cross-fetch "^3.1.4"
     eventsource "^1.1.0"
     qs "^6.10.1"
 
-"@chainsafe/lodestar-config@^0.32.1-dev.13", "@chainsafe/lodestar-config@^0.32.1-dev.13+be50e4e21":
-  version "0.32.1-dev.13"
-  resolved "https://registry.yarnpkg.com/@chainsafe/lodestar-config/-/lodestar-config-0.32.1-dev.13.tgz#d1d612c783664489909764503c0f899f61080070"
-  integrity sha512-z+cQtWEddovz3TcC2PykrsNLp5PkeYtjsLfLEadN7R71clLGZCNZBtpMjGIkkQzX4NnPm7JjebrL6A1Gs0hrZQ==
+"@chainsafe/lodestar-config@^0.32.1-dev.18", "@chainsafe/lodestar-config@^0.32.1-dev.18+22c2667d5":
+  version "0.32.1-dev.18"
+  resolved "https://registry.yarnpkg.com/@chainsafe/lodestar-config/-/lodestar-config-0.32.1-dev.18.tgz#715b859ac2a032dea2d2d7300e9ef6bb0966a308"
+  integrity sha512-eXbpIit4KIhmSHkjh6KNlRrmFyGuw+YuA5KDAt6xh3yh8uVFG/spYgqbocb6JKPttbxQpr51pGQ9dAQt0vPsew==
   dependencies:
-    "@chainsafe/lodestar-params" "^0.32.1-dev.13+be50e4e21"
-    "@chainsafe/lodestar-types" "^0.32.1-dev.13+be50e4e21"
+    "@chainsafe/lodestar-params" "^0.32.1-dev.18+22c2667d5"
+    "@chainsafe/lodestar-types" "^0.32.1-dev.18+22c2667d5"
     "@chainsafe/ssz" "^0.8.20"
 
-"@chainsafe/lodestar-light-client@^0.32.1-dev.13":
-  version "0.32.1-dev.13"
-  resolved "https://registry.yarnpkg.com/@chainsafe/lodestar-light-client/-/lodestar-light-client-0.32.1-dev.13.tgz#9b8a07918465533dd5e12168dc5e9b0ec014cb81"
-  integrity sha512-b17SlTImVNxwYuuX9xZXM8uMdTNP4oW58BJAC9UgMvlWoD6NM3efX929DIXQHlaUckzYgQxkub54J6ocdHNZ2A==
+"@chainsafe/lodestar-light-client@^0.32.1-dev.18":
+  version "0.32.1-dev.18"
+  resolved "https://registry.yarnpkg.com/@chainsafe/lodestar-light-client/-/lodestar-light-client-0.32.1-dev.18.tgz#a7e4ce18a4c6a301e71f31f9c20e4d2ee50e7bbf"
+  integrity sha512-HqCPpXYTPO8ryiUX4Ce8A0r5ops6Xk+j6KWoLFklFDzh/7bjz6lbGzk/IBu7UFluDkbTrtbRIyHXCnQYzIpR1w==
   dependencies:
     "@chainsafe/abort-controller" "^3.0.1"
     "@chainsafe/bls" "6.0.3"
-    "@chainsafe/lodestar-api" "^0.32.1-dev.13+be50e4e21"
-    "@chainsafe/lodestar-config" "^0.32.1-dev.13+be50e4e21"
-    "@chainsafe/lodestar-params" "^0.32.1-dev.13+be50e4e21"
-    "@chainsafe/lodestar-types" "^0.32.1-dev.13+be50e4e21"
-    "@chainsafe/lodestar-utils" "^0.32.1-dev.13+be50e4e21"
+    "@chainsafe/lodestar-api" "^0.32.1-dev.18+22c2667d5"
+    "@chainsafe/lodestar-config" "^0.32.1-dev.18+22c2667d5"
+    "@chainsafe/lodestar-params" "^0.32.1-dev.18+22c2667d5"
+    "@chainsafe/lodestar-types" "^0.32.1-dev.18+22c2667d5"
+    "@chainsafe/lodestar-utils" "^0.32.1-dev.18+22c2667d5"
     "@chainsafe/persistent-merkle-tree" "^0.3.7"
     "@chainsafe/ssz" "^0.8.20"
     cross-fetch "^3.1.4"
     mitt "^3.0.0"
 
-"@chainsafe/lodestar-params@^0.32.1-dev.13", "@chainsafe/lodestar-params@^0.32.1-dev.13+be50e4e21":
-  version "0.32.1-dev.13"
-  resolved "https://registry.yarnpkg.com/@chainsafe/lodestar-params/-/lodestar-params-0.32.1-dev.13.tgz#97b7fb4b4f0683c0da48dab69f0eab493dde4ea3"
-  integrity sha512-fNYsQdFI2v72R+8/LMmHkzey+ov+fDOBSLcg+BUGXhD/ypE7BKODXypsF7NHVGBCO9BiKNNGYq2tIXb3gQg8Lg==
+"@chainsafe/lodestar-params@^0.32.1-dev.18", "@chainsafe/lodestar-params@^0.32.1-dev.18+22c2667d5":
+  version "0.32.1-dev.18"
+  resolved "https://registry.yarnpkg.com/@chainsafe/lodestar-params/-/lodestar-params-0.32.1-dev.18.tgz#2faec3b668faa03d69525ff163f53511ff8c0f31"
+  integrity sha512-B7Ac2I7eKXb+XfxjTBhhvocttk6NrAivX3L3tLNgPPCJDNd9viwrf/Lf61/rJxB8kSP/TwEDrydJgqJOktKWPA==
   dependencies:
     "@chainsafe/ssz" "^0.8.20"
 
-"@chainsafe/lodestar-types@^0.32.1-dev.13", "@chainsafe/lodestar-types@^0.32.1-dev.13+be50e4e21":
-  version "0.32.1-dev.13"
-  resolved "https://registry.yarnpkg.com/@chainsafe/lodestar-types/-/lodestar-types-0.32.1-dev.13.tgz#5678c2b05e606f42b9d607cebf2c99a0ec47d499"
-  integrity sha512-NNjhtv1RoKsAmeexIghhAnv3K+P+YZtD8X/uCxv723QXYOq/NwFiLCXdEXGeWuF0vVdJe/R334LaO5/sB9ZfjQ==
+"@chainsafe/lodestar-types@^0.32.1-dev.18", "@chainsafe/lodestar-types@^0.32.1-dev.18+22c2667d5":
+  version "0.32.1-dev.18"
+  resolved "https://registry.yarnpkg.com/@chainsafe/lodestar-types/-/lodestar-types-0.32.1-dev.18.tgz#c3164cbc7dffaf5c529eddefa809b6ea92604179"
+  integrity sha512-Y5wqbZgBg7559JU4Nidr80TEnqfA8u/fqcn77m2bUjaIgeZnRELW/NMfpa68I7c6nbQ492UAmTtFnbiVK1eLJA==
   dependencies:
-    "@chainsafe/lodestar-params" "^0.32.1-dev.13+be50e4e21"
+    "@chainsafe/lodestar-params" "^0.32.1-dev.18+22c2667d5"
     "@chainsafe/ssz" "^0.8.20"
 
-"@chainsafe/lodestar-utils@^0.32.1-dev.13", "@chainsafe/lodestar-utils@^0.32.1-dev.13+be50e4e21":
-  version "0.32.1-dev.13"
-  resolved "https://registry.yarnpkg.com/@chainsafe/lodestar-utils/-/lodestar-utils-0.32.1-dev.13.tgz#0235822289f7b4f11a781a41f6cde62a5bce2459"
-  integrity sha512-LtWaq2+HAtu4wgiVnhPhOpYiJcBe/XGMOBHpnciPM1EymlXzVcF5+zDlizm5bzBsvkeZZAo0blYPwc63RbDttw==
+"@chainsafe/lodestar-utils@^0.32.1-dev.18", "@chainsafe/lodestar-utils@^0.32.1-dev.18+22c2667d5":
+  version "0.32.1-dev.18"
+  resolved "https://registry.yarnpkg.com/@chainsafe/lodestar-utils/-/lodestar-utils-0.32.1-dev.18.tgz#1376c9342f31fb067b1441935a9886d9ff083b9b"
+  integrity sha512-Ypyxq1tsBxVd+385OLSVDQzLuuPvGo+Q7RXKaELINeytdTSlgjv3NciG83QWiTXrHxlXfP5kMu4PpRXguXTStA==
   dependencies:
     "@chainsafe/abort-controller" "^3.0.1"
     "@chainsafe/ssz" "^0.8.20"

@@ -18,6 +18,8 @@ import {networkGenesis} from "@chainsafe/lodestar-light-client/lib/networks";
 import {networksChainConfig} from "@chainsafe/lodestar-config/networks";
 import {computeSyncPeriodAtSlot} from "@chainsafe/lodestar-light-client/lib/utils/clock";
 
+const networkDefault = "mainnet";
+
 function getNetworkData(network: string) {
   if (network === "mainnet") {
     return {
@@ -45,8 +47,8 @@ function getNetworkUrl(network: string) {
 }
 
 export default function App(): JSX.Element {
-  const [network, setNetwork] = useState("prater");
-  const [beaconApiUrl, setBeaconApiUrl] = useState(getNetworkUrl(network));
+  const [network, setNetwork] = useState(networkDefault);
+  const [beaconApiUrl, setBeaconApiUrl] = useState(getNetworkUrl(networkDefault));
   const [checkpointRootStr, setCheckpointRootStr] = useState("0xaabb...");
   const [reqStatusInit, setReqStatusInit] = useState<ReqStatus<Lightclient, string>>({});
   const [localAvailable, setLocalAvailable] = useState(false);

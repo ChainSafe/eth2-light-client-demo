@@ -3,7 +3,6 @@ import {getClient} from "@chainsafe/lodestar-api";
 import {Lightclient, LightclientEvent} from "@chainsafe/lodestar-light-client";
 import {init} from "@chainsafe/bls";
 import {fromHexString, toHexString} from "@chainsafe/ssz";
-import {Checkpoint} from "@chainsafe/lodestar-types/phase0";
 import {createIChainForkConfig} from "@chainsafe/lodestar-config";
 import {config as configDefault} from "@chainsafe/lodestar-config/default";
 import Footer from "./components/Footer";
@@ -35,9 +34,19 @@ function getNetworkData(network: string) {
   }
 }
 
+function getNetworkUrl(network: string) {
+  if (network === "mainnet") {
+    return "https://mainnet.lodestar.casa";
+  } else if (network === "prater") {
+    return "https://prater.lodestar.casa";
+  } else {
+    throw Error(`Unknown network: ${network}`);
+  }
+}
+
 export default function App(): JSX.Element {
   const [network, setNetwork] = useState("prater");
-  const [beaconApiUrl, setBeaconApiUrl] = useState("https://prater.lodestar.casa");
+  const [beaconApiUrl, setBeaconApiUrl] = useState(getNetworkUrl(network));
   const [checkpointRootStr, setCheckpointRootStr] = useState("0xaabb...");
   const [reqStatusInit, setReqStatusInit] = useState<ReqStatus<Lightclient, string>>({});
   const [localAvailable, setLocalAvailable] = useState(false);
@@ -49,6 +58,10 @@ export default function App(): JSX.Element {
       setReqStatusInit({error: e});
     });
   }, []);
+
+  useEffect(() => {
+    setBeaconApiUrl(getNetworkUrl(network));
+  }, [network]);
 
   // Check if local snapshot is available
   useEffect(() => {
@@ -148,7 +161,7 @@ export default function App(): JSX.Element {
       const client = getClient(configDefault, {baseUrl: beaconApiUrl});
       const res = await client.beacon.getStateFinalityCheckpoints("head");
       const finalizedCheckpoint = res.data.finalized;
-      setCheckpointRootStr(toCheckpointStr(finalizedCheckpoint));
+      setCheckpointRootStr(toHexString(finalizedCheckpoint.root));
 
       // Hasn't load clint, just disable loader
       setReqStatusInit({});
@@ -179,6 +192,16 @@ export default function App(): JSX.Element {
         </section>
 
         <section>
+          <div className="field">
+            <div className="control">
+              <p>Network</p>
+              <select onChange={(e) => setNetwork(e.target.value)}>
+                <option value="mainnet">mainnet</option>
+                <option value="prater">prater</option>
+              </select>
+            </div>
+          </div>
+
           <div className="field">
             <div className="control">
               <p>Beacon node API URL</p>
@@ -252,8 +275,4 @@ export default function App(): JSX.Element {
       <Footer />
     </>
   );
-}
-
-function toCheckpointStr(checkpoint: Checkpoint): string {
-  return `${toHexString(checkpoint.root)}:${checkpoint.epoch}`;
 }

@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from "react";
 import {EPOCHS_PER_SYNC_COMMITTEE_PERIOD, SLOTS_PER_EPOCH} from "@chainsafe/lodestar-params";
-import {Lightclient} from "@chainsafe/lodestar-light-client/lib/client";
+import {Lightclient} from "@chainsafe/lodestar-light-client";
 
 export function TimeMonitor({client}: {client: Lightclient}): JSX.Element {
   const [, setCounter] = useState<number>();
@@ -15,18 +15,14 @@ export function TimeMonitor({client}: {client: Lightclient}): JSX.Element {
   const secondsPerEpoch = SECONDS_PER_SLOT * SLOTS_PER_EPOCH;
   const secondsPerPeriod = secondsPerEpoch * EPOCHS_PER_SYNC_COMMITTEE_PERIOD;
 
-  // TODO: fix types
-  // @ts-ignore
-  const genesisTime = client.clock["genesisTime"];
-
-  const diffInSeconds = Date.now() / 1000 - genesisTime;
+  const diffInSeconds = Date.now() / 1000 - client.genesisTime;
   const slot = Math.floor(diffInSeconds / SECONDS_PER_SLOT);
   const slotInEpoch = slot % SLOTS_PER_EPOCH;
   const slotRatio = (diffInSeconds % secondsPerEpoch) / secondsPerEpoch;
   const epoch = Math.floor(slot / SLOTS_PER_EPOCH);
   const epochInPeriod = epoch % EPOCHS_PER_SYNC_COMMITTEE_PERIOD;
   const epochRatio = (diffInSeconds % secondsPerPeriod) / secondsPerPeriod;
-  const period = Math.floor(epoch / EPOCHS_PER_SYNC_COMMITTEE_PERIOD);
+  const period = Math.floor((epoch - client.config.ALTAIR_FORK_EPOCH) / EPOCHS_PER_SYNC_COMMITTEE_PERIOD);
 
   return (
     <section>

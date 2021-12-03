@@ -219,3 +219,29 @@ section > .field:not(:last-child) {
 .yellow {
   color: #f0cf09;
 }
+
+.proof-container {
+  .proof-data {
+    display: flex;
+    .paths {
+      width: 50%;
+      max-width: 24rem;
+      margin-right: 1rem;
+    }
+  }
+
+  .show-proof-toggle {
+    opacity: 0.5;
+  }
+
+  textarea {
+    border-radius: 6px;
+  }
+}
+
+.alert-warning {
+  padding: 0.5rem;
+  border: 1px solid #ffd20040;
+  background-color: #ffd2001c;
+  border-radius: 0.25rem;
+}

@@ -214,6 +214,16 @@ section > .field:not(:last-child) {
     border-bottom-left-radius: 0;
     border-top-left-radius: 0;
   }
+
+  .fill-latest-finalized {
+    opacity: 0.5;
+    margin-left: 0.5rem;
+    font-size: 85%;
+    cursor: pointer;
+    &:hover {
+      opacity: 1;
+    }
+  }
 }
 
 .yellow {

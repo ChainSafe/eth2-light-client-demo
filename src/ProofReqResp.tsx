@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import throttle from "lodash/throttle";
 import {Lightclient} from "@chainsafe/lodestar-light-client";
 import {TreeOffsetProof} from "@chainsafe/persistent-merkle-tree";
@@ -22,22 +22,23 @@ export function ProofReqResp({client, head}: {client: Lightclient; head: phase0.
   const [reqStatusProof, setReqStatusProof] = useState<ReqStatus<{proof: TreeOffsetProof; stateStr: StateRender}>>({});
   const [pathsStr, setPaths] = useState(initialPathStr);
 
-  const fetchProofThrottled = useCallback(
-    throttle(async function fetchProof(stateRoot: Uint8Array, pathsStr: string): Promise<void> {
-      try {
-        setReqStatusProof({loading: true});
-        const pathsQueried = JSON.parse(pathsStr);
-        const {proof, header} = await client.getHeadStateProof(pathsQueried);
-        if (proof.leaves.length <= 0) {
-          throw Error("Empty proof");
+  const fetchProofThrottled = useMemo(
+    () =>
+      throttle(async function fetchProof(stateRoot: Uint8Array, pathsStr: string): Promise<void> {
+        try {
+          setReqStatusProof({loading: true});
+          const pathsQueried = JSON.parse(pathsStr);
+          const {proof, header} = await client.getHeadStateProof(pathsQueried);
+          if (proof.leaves.length <= 0) {
+            throw Error("Empty proof");
+          }
+          const state = client.config.getForkTypes(header.slot).BeaconState.createTreeBackedFromProofUnsafe(proof);
+          const stateStr = renderState(pathsQueried, state ?? null);
+          setReqStatusProof({result: {proof, stateStr}});
+        } catch (e) {
+          setReqStatusProof({error: e as Error});
         }
-        const state = client.config.getForkTypes(header.slot).BeaconState.createTreeBackedFromProofUnsafe(proof);
-        const stateStr = renderState(pathsQueried, state ?? null);
-        setReqStatusProof({result: {proof, stateStr}});
-      } catch (e) {
-        setReqStatusProof({error: e as Error});
-      }
-    }, 1000),
+      }, 1000),
     [client, setReqStatusProof]
   );
 

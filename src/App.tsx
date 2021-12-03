@@ -17,6 +17,7 @@ import {phase0, SyncPeriod} from "@chainsafe/lodestar-types";
 import {networkGenesis} from "@chainsafe/lodestar-light-client/lib/networks";
 import {networksChainConfig} from "@chainsafe/lodestar-config/networks";
 import {computeSyncPeriodAtSlot} from "@chainsafe/lodestar-light-client/lib/utils/clock";
+import {getLcLoggerConsole} from "@chainsafe/lodestar-light-client/lib/utils/logger";
 
 const networkDefault = "mainnet";
 
@@ -75,6 +76,9 @@ export default function App(): JSX.Element {
     if (!client) return;
 
     client.start();
+    const head = client.getHead();
+    setHead(head);
+    setLatestSyncedPeriod(computeSyncPeriodAtSlot(client.config, head.slot));
 
     function onNewHead(newHeader: phase0.BeaconBlockHeader) {
       setHead(newHeader);
@@ -110,15 +114,13 @@ export default function App(): JSX.Element {
 
       const client = await Lightclient.initializeFromCheckpointRoot({
         config,
+        logger: getLcLoggerConsole({logDebug: true}),
         beaconApiUrl,
         genesisData,
         checkpointRoot: fromHexString("0x9f810339d6c30bf360b531b1bfb7c9a80dbbd4caa54c7bb1b98e44752c07ea98"),
       });
-      setReqStatusInit({result: client});
 
-      const head = client.getHead();
-      setHead(head);
-      setLatestSyncedPeriod(computeSyncPeriodAtSlot(client.config, head.slot));
+      setReqStatusInit({result: client});
     } catch (e) {
       setReqStatusInit({error: e as Error});
       console.error(e);
@@ -143,6 +145,7 @@ export default function App(): JSX.Element {
 
       const client = await Lightclient.initializeFromCheckpointRoot({
         config,
+        logger: getLcLoggerConsole({logDebug: true}),
         beaconApiUrl,
         genesisData,
         checkpointRoot,

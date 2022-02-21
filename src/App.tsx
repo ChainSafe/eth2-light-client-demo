@@ -78,7 +78,7 @@ export default function App(): JSX.Element {
     client.start();
     const head = client.getHead();
     setHead(head);
-    setLatestSyncedPeriod(computeSyncPeriodAtSlot(client.config, head.slot));
+    setLatestSyncedPeriod(computeSyncPeriodAtSlot(head.slot));
 
     function onNewHead(newHeader: phase0.BeaconBlockHeader) {
       setHead(newHeader);

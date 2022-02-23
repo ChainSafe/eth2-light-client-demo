@@ -55,6 +55,8 @@ RUN yarn build
 
 # production env
 FROM nginx:stable-alpine
+#copy build artifacts from build stage
 COPY --from=build /app/build /usr/share/nginx/html
+#expose nginx on port 80
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

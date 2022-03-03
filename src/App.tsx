@@ -12,16 +12,22 @@ import {SyncStatus} from "./SyncStatus";
 import {TimeMonitor} from "./TimeMonitor";
 import {ProofReqResp} from "./ProofReqResp";
 import {ReqStatus} from "./types";
-import {readSnapshot, hasSnapshot, deleteSnapshot} from "./storage";
-import {phase0, SyncPeriod} from "@chainsafe/lodestar-types";
+import {phase0, SyncPeriod,ssz,bellatrix} from "@chainsafe/lodestar-types";
 import {networkGenesis} from "@chainsafe/lodestar-light-client/lib/networks";
 import {networksChainConfig} from "@chainsafe/lodestar-config/networks";
 import {computeSyncPeriodAtSlot} from "@chainsafe/lodestar-light-client/lib/utils/clock";
 import {getLcLoggerConsole} from "@chainsafe/lodestar-light-client/lib/utils/logger";
+import Web3 from "web3"
+import { SecureTrie } from 'merkle-patricia-tree'
+import {Account,toBuffer,keccak256} from "ethereumjs-util"
+import { DefaultStateManager } from '@ethereumjs/vm/dist/state'
+import {numberToHex} from "web3-utils" 
 
-const networkDefault = "mainnet";
+const networkDefault = "custom";
+const stateManager = new DefaultStateManager()
+type ParsedAccount ={balance:string,nonce:string,verified:boolean}
 
-function getNetworkData(network: string) {
+async function getNetworkData(network: string,beaconApiUrl?: string) {
   if (network === "mainnet") {
     return {
       genesisData: networkGenesis.mainnet,
@@ -33,28 +39,40 @@ function getNetworkData(network: string) {
       chainConfig: networksChainConfig.prater,
     };
   } else {
-    throw Error(`Unknown network: ${network}`);
+    if(!beaconApiUrl){
+      throw Error(`Unknown network: ${network}, requires beaconApiUrl to load config`);
+    }
+    const api = getClient(configDefault, {baseUrl:beaconApiUrl});
+    const {data: genesisData} = await api.beacon.getGenesis();
+    const {data: chainConfig} = await api.config.getSpec();
+    const networkData= {genesisData:{genesisTime: Number(genesisData.genesisTime),genesisValidatorsRoot:toHexString(genesisData.genesisValidatorsRoot)},chainConfig};
+    return networkData;
   }
 }
 
 function getNetworkUrl(network: string) {
   if (network === "mainnet") {
-    return "https://mainnet.lodestar.casa";
+    return {beaconApiUrl:"https://mainnet.lodestar.casa",elRpcUrl: "https://mainnet.lodestar.casa"};
   } else if (network === "prater") {
-    return "https://prater.lodestar.casa";
+    return {beaconApiUrl:"https://prater.lodestar.casa",elRpcUrl: "https://praterrpc.lodestar.casa"};
   } else {
-    throw Error(`Unknown network: ${network}`);
+    return {beaconApiUrl:"http://kilnv1.lodestar.casa:32184",elRpcUrl:"http://kilnv1.lodestar.casa:31791"}
   }
 }
 
 export default function App(): JSX.Element {
   const [network, setNetwork] = useState(networkDefault);
-  const [beaconApiUrl, setBeaconApiUrl] = useState(getNetworkUrl(networkDefault));
+  const [beaconApiUrl, setBeaconApiUrl] = useState(getNetworkUrl(networkDefault).beaconApiUrl);
+  const [elRpcUrl, setElRpcUrl] = useState(getNetworkUrl(networkDefault).elRpcUrl);
   const [checkpointRootStr, setCheckpointRootStr] = useState("");
   const [reqStatusInit, setReqStatusInit] = useState<ReqStatus<Lightclient, string>>({});
-  const [localAvailable, setLocalAvailable] = useState(false);
+  const [localAvailable] = useState(false);
   const [head, setHead] = useState<phase0.BeaconBlockHeader>();
   const [latestSyncedPeriod, setLatestSyncedPeriod] = useState<number>();
+  const [executionPayload,setExecutionPayload]=useState<bellatrix.ExecutionPayload>();
+  const [address,setAddress]= useState<string>("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
+  const [account,setAccount] = useState<ParsedAccount>();
+  const [web3,setWeb3]=useState<Web3>();
 
   useEffect(() => {
     init("herumi").catch((e) => {
@@ -63,13 +81,21 @@ export default function App(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    setBeaconApiUrl(getNetworkUrl(network));
+    setBeaconApiUrl(getNetworkUrl(network).beaconApiUrl);
+    setElRpcUrl(getNetworkUrl(network).elRpcUrl);
   }, [network]);
 
+  useEffect(()=>{
+    if(executionPayload && address && web3){
+      fetchAndVerifyAddress({web3,executionPayload,address}).then((verifiedAccount)=>{setAccount(verifiedAccount)});
+    }
+  },[executionPayload,address,web3])
+
+
   // Check if local snapshot is available
-  useEffect(() => {
-    setLocalAvailable(hasSnapshot());
-  }, [reqStatusInit.result]);
+  // useEffect(() => {
+  //   setLocalAvailable(hasSnapshot());
+  // }, [reqStatusInit.result]);
 
   useEffect(() => {
     const client = reqStatusInit.result;
@@ -78,7 +104,7 @@ export default function App(): JSX.Element {
     client.start();
     const head = client.getHead();
     setHead(head);
-    setLatestSyncedPeriod(computeSyncPeriodAtSlot(client.config, head.slot));
+    setLatestSyncedPeriod(computeSyncPeriodAtSlot(head.slot));
 
     function onNewHead(newHeader: phase0.BeaconBlockHeader) {
       setHead(newHeader);
@@ -98,33 +124,7 @@ export default function App(): JSX.Element {
   }, [reqStatusInit.result]);
 
   async function initializeFromLocalSnapshot() {
-    try {
-      // Check if there is state persisted
-      const prevSnapshot = readSnapshot();
-      if (!prevSnapshot) {
-        throw Error("No snapshot stored locally");
-      }
-
-      const {genesisData, chainConfig} = getNetworkData(network);
-      const config = createIChainForkConfig(chainConfig);
-
-      setReqStatusInit({
-        loading: `Restoring prevSnapshot at slot ${prevSnapshot.header.slot}`,
-      });
-
-      const client = await Lightclient.initializeFromCheckpointRoot({
-        config,
-        logger: getLcLoggerConsole({logDebug: true}),
-        beaconApiUrl,
-        genesisData,
-        checkpointRoot: fromHexString("0x9f810339d6c30bf360b531b1bfb7c9a80dbbd4caa54c7bb1b98e44752c07ea98"),
-      });
-
-      setReqStatusInit({result: client});
-    } catch (e) {
-      setReqStatusInit({error: e as Error});
-      console.error(e);
-    }
+    
   }
 
   async function initializeFromCheckpointStr(checkpointRootHex: string) {
@@ -140,7 +140,7 @@ export default function App(): JSX.Element {
 
       setReqStatusInit({loading: `Syncing from trusted checkpoint: ${checkpointRootHex}`});
 
-      const {genesisData, chainConfig} = getNetworkData(network);
+      const {genesisData, chainConfig} = await getNetworkData(network,beaconApiUrl);
       const config = createIChainForkConfig(chainConfig);
 
       const client = await Lightclient.initializeFromCheckpointRoot({
@@ -150,6 +150,16 @@ export default function App(): JSX.Element {
         genesisData,
         checkpointRoot,
       });
+
+      const head = client.getHead();
+      const blockHash = toHexString(ssz.phase0.BeaconBlockHeader.hashTreeRoot(head))
+      const {data:block} = (await client.api.beacon.getBlockV2(blockHash)) as unknown as {data:bellatrix.SignedBeaconBlock};
+      const executionPayload = block.message.body.executionPayload;
+      setExecutionPayload(executionPayload);
+      setWeb3(new Web3(elRpcUrl));
+
+
+      
 
       setReqStatusInit({result: client});
     } catch (e) {
@@ -177,8 +187,9 @@ export default function App(): JSX.Element {
     }
   }
 
+
   function deleteState() {
-    deleteSnapshot();
+    // deleteSnapshot();
     setReqStatusInit({});
   }
 
@@ -200,9 +211,10 @@ export default function App(): JSX.Element {
           <div className="field">
             <div className="control">
               <p>Network</p>
-              <select onChange={(e) => setNetwork(e.target.value)}>
+              <select onChange={(e) => setNetwork(e.target.value)} value={network}>
                 <option value="mainnet">mainnet</option>
                 <option value="prater">prater</option>
+                <option value="custom">custom</option>
               </select>
             </div>
           </div>
@@ -213,6 +225,45 @@ export default function App(): JSX.Element {
               <input value={beaconApiUrl} onChange={(e) => setBeaconApiUrl(e.target.value)} />
             </div>
           </div>
+
+          <div className="field">
+            <div className="control">
+              <p>any ethereum address</p>
+              <input value={address} onChange={(e) => setAddress(e.target.value)} />
+            </div>
+          </div>
+          {account && (
+            <>
+              <div className="account">
+                <div className="balance">
+                  <span>balance</span>
+                  <input
+                    value={account.balance}
+                    disabled={true}
+                  />
+                </div>
+                <div className="nonce">
+                  <span>nonce</span>
+                  <input
+                    value={account.nonce}
+                    disabled={true}
+                  />
+                </div>
+                <div className="status">
+                  <span>status</span>
+                  <input
+                    value={account.verified?"valid":"invalid"}
+                    disabled={true}
+                  />
+                </div>
+                <div className="icon">
+                  <div>
+                    <p style={{fontSize:"3em"}}>{account.verified?"✅":"❌"}</p>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
 
           <br></br>
 
@@ -286,4 +337,37 @@ export default function App(): JSX.Element {
       <Footer />
     </>
   );
+}
+
+const externalAddressStorageHash = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
+const externalAddressCodeHash= "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470";
+
+async function fetchAndVerifyAddress({web3,executionPayload,address}:{web3:Web3,executionPayload:bellatrix.ExecutionPayload,address:string}):Promise<ParsedAccount> {
+  
+  
+  const params:[string,string[],number] = [address,[],executionPayload.blockNumber];
+  const stateRoot = toHexString(executionPayload.stateRoot);
+  const proof = await web3.eth.getProof(...params);
+  const {balance,nonce}=proof;
+
+  // Verify the proof, web3 converts nonce and balance into number strings, however
+  // ethereumjs verify proof requires them in the original hex format
+  proof.nonce = numberToHex(proof.nonce)
+  proof.balance = numberToHex(proof.balance)
+  const proofStateRoot = toHexString(keccak256(toBuffer(proof.accountProof[0])))
+  const verified = (stateRoot===proofStateRoot) && (proof.storageHash===externalAddressStorageHash) && (proof.codeHash === externalAddressCodeHash) && (await stateManager.verifyProof(proof))
+
+  return {balance,nonce,verified}
+
+  // console.log("fetched proof",{verified})
+  // const accountProof =proof.accountProof.map((rlpString) =>toBuffer(rlpString))
+  // console.log("accountProof",{accountProof})
+  // const value = await SecureTrie.verifyProof(toBuffer(toHexString(executionPayload.stateRoot)), toBuffer(address), accountProof)
+  // if(value!=null){
+  //   console.log("value ", {value})
+  // const account = Account.fromRlpSerializedAccount(value)
+  // console.log("account ",{account})     
+  // return account;   
+  // }
+  // return null;
 }

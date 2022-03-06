@@ -54,4 +54,4 @@
 //   localStorage.setItem(genesisValidatorsRootKey, toHexString(root));
 // }
 
-export {}
+export {};

@@ -10,7 +10,9 @@
     "postbuild": "react-snap",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "mock-server": "ts-node mock-server --project ./mock-server/tsconfig.json"
+    "mock-server": "ts-node mock-server --project ./mock-server/tsconfig.json",
+    "lint": "eslint --color --ext .tsx,.ts src/",
+    "lint:fix": "yarn run lint --fix"
   },
   "dependencies": {
     "@chainsafe/bls": "6.0.3",
@@ -65,8 +67,12 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.177",
+    "@typescript-eslint/parser": "^5.13.0",
+    "eslint": "^7.14.0",
+    "eslint-plugin-prettier": "^4.0.0",
     "fastify": "^3.24.1",
     "fastify-cors": "^6.0.2",
+    "prettier": "^2.5.1",
     "react-snap": "^1.23.0",
     "ts-node": "^10.4.0"
   }

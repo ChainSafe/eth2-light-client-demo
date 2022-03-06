@@ -12,22 +12,22 @@ import {SyncStatus} from "./SyncStatus";
 import {TimeMonitor} from "./TimeMonitor";
 import {ProofReqResp} from "./ProofReqResp";
 import {ReqStatus} from "./types";
-import {phase0, SyncPeriod,ssz,bellatrix} from "@chainsafe/lodestar-types";
+import {phase0, SyncPeriod, ssz, bellatrix} from "@chainsafe/lodestar-types";
 import {networkGenesis} from "@chainsafe/lodestar-light-client/lib/networks";
 import {networksChainConfig} from "@chainsafe/lodestar-config/networks";
 import {computeSyncPeriodAtSlot} from "@chainsafe/lodestar-light-client/lib/utils/clock";
 import {getLcLoggerConsole} from "@chainsafe/lodestar-light-client/lib/utils/logger";
-import Web3 from "web3"
-import { SecureTrie } from 'merkle-patricia-tree'
-import {Account,toBuffer,keccak256} from "ethereumjs-util"
-import { DefaultStateManager } from '@ethereumjs/vm/dist/state'
-import {numberToHex} from "web3-utils" 
+import Web3 from "web3";
+import {SecureTrie} from "merkle-patricia-tree";
+import {Account, toBuffer, keccak256} from "ethereumjs-util";
+import {DefaultStateManager} from "@ethereumjs/vm/dist/state";
+import {numberToHex} from "web3-utils";
 
 const networkDefault = "custom";
-const stateManager = new DefaultStateManager()
-type ParsedAccount ={balance:string,nonce:string,verified:boolean}
+const stateManager = new DefaultStateManager();
+type ParsedAccount = {balance: string; nonce: string; verified: boolean};
 
-async function getNetworkData(network: string,beaconApiUrl?: string) {
+async function getNetworkData(network: string, beaconApiUrl?: string) {
   if (network === "mainnet") {
     return {
       genesisData: networkGenesis.mainnet,
@@ -39,24 +39,30 @@ async function getNetworkData(network: string,beaconApiUrl?: string) {
       chainConfig: networksChainConfig.prater,
     };
   } else {
-    if(!beaconApiUrl){
+    if (!beaconApiUrl) {
       throw Error(`Unknown network: ${network}, requires beaconApiUrl to load config`);
     }
-    const api = getClient(configDefault, {baseUrl:beaconApiUrl});
+    const api = getClient(configDefault, {baseUrl: beaconApiUrl});
     const {data: genesisData} = await api.beacon.getGenesis();
     const {data: chainConfig} = await api.config.getSpec();
-    const networkData= {genesisData:{genesisTime: Number(genesisData.genesisTime),genesisValidatorsRoot:toHexString(genesisData.genesisValidatorsRoot)},chainConfig};
+    const networkData = {
+      genesisData: {
+        genesisTime: Number(genesisData.genesisTime),
+        genesisValidatorsRoot: toHexString(genesisData.genesisValidatorsRoot),
+      },
+      chainConfig,
+    };
     return networkData;
   }
 }
 
 function getNetworkUrl(network: string) {
   if (network === "mainnet") {
-    return {beaconApiUrl:"https://mainnet.lodestar.casa",elRpcUrl: "https://mainnet.lodestar.casa"};
+    return {beaconApiUrl: "https://mainnet.lodestar.casa", elRpcUrl: "https://mainnet.lodestar.casa"};
   } else if (network === "prater") {
-    return {beaconApiUrl:"https://prater.lodestar.casa",elRpcUrl: "https://praterrpc.lodestar.casa"};
+    return {beaconApiUrl: "https://prater.lodestar.casa", elRpcUrl: "https://praterrpc.lodestar.casa"};
   } else {
-    return {beaconApiUrl:"http://kilnv1.lodestar.casa:32184",elRpcUrl:"http://kilnv1.lodestar.casa:31791"}
+    return {beaconApiUrl: "http://kilnv1.lodestar.casa:32184", elRpcUrl: "http://kilnv1.lodestar.casa:31791"};
   }
 }
 
@@ -69,10 +75,10 @@ export default function App(): JSX.Element {
   const [localAvailable] = useState(false);
   const [head, setHead] = useState<phase0.BeaconBlockHeader>();
   const [latestSyncedPeriod, setLatestSyncedPeriod] = useState<number>();
-  const [executionPayload,setExecutionPayload]=useState<bellatrix.ExecutionPayload>();
-  const [address,setAddress]= useState<string>("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
-  const [account,setAccount] = useState<ParsedAccount>();
-  const [web3,setWeb3]=useState<Web3>();
+  const [executionPayload, setExecutionPayload] = useState<bellatrix.ExecutionPayload>();
+  const [address, setAddress] = useState<string>("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
+  const [account, setAccount] = useState<ParsedAccount>();
+  const [web3, setWeb3] = useState<Web3>();
 
   useEffect(() => {
     init("herumi").catch((e) => {
@@ -85,12 +91,13 @@ export default function App(): JSX.Element {
     setElRpcUrl(getNetworkUrl(network).elRpcUrl);
   }, [network]);
 
-  useEffect(()=>{
-    if(executionPayload && address && web3){
-      fetchAndVerifyAddress({web3,executionPayload,address}).then((verifiedAccount)=>{setAccount(verifiedAccount)});
+  useEffect(() => {
+    if (executionPayload && address && web3) {
+      fetchAndVerifyAddress({web3, executionPayload, address}).then((verifiedAccount) => {
+        setAccount(verifiedAccount);
+      });
     }
-  },[executionPayload,address,web3])
-
+  }, [executionPayload, address, web3]);
 
   // Check if local snapshot is available
   // useEffect(() => {
@@ -123,15 +130,13 @@ export default function App(): JSX.Element {
     };
   }, [reqStatusInit.result]);
 
-  async function initializeFromLocalSnapshot() {
-    
-  }
+  async function initializeFromLocalSnapshot() {}
 
   async function initializeFromCheckpointStr(checkpointRootHex: string) {
     try {
       // Validate root
       if (!checkpointRootHex.startsWith("0x")) {
-        throw Error(`Root must start with 0x`);
+        throw Error("Root must start with 0x");
       }
       const checkpointRoot = fromHexString(checkpointRootHex);
       if (checkpointRoot.length !== 32) {
@@ -140,7 +145,7 @@ export default function App(): JSX.Element {
 
       setReqStatusInit({loading: `Syncing from trusted checkpoint: ${checkpointRootHex}`});
 
-      const {genesisData, chainConfig} = await getNetworkData(network,beaconApiUrl);
+      const {genesisData, chainConfig} = await getNetworkData(network, beaconApiUrl);
       const config = createIChainForkConfig(chainConfig);
 
       const client = await Lightclient.initializeFromCheckpointRoot({
@@ -152,19 +157,19 @@ export default function App(): JSX.Element {
       });
 
       const head = client.getHead();
-      const blockHash = toHexString(ssz.phase0.BeaconBlockHeader.hashTreeRoot(head))
-      const {data:block} = (await client.api.beacon.getBlockV2(blockHash)) as unknown as {data:bellatrix.SignedBeaconBlock};
+      const blockHash = toHexString(ssz.phase0.BeaconBlockHeader.hashTreeRoot(head));
+      const {data: block} = (await client.api.beacon.getBlockV2(blockHash)) as unknown as {
+        data: bellatrix.SignedBeaconBlock;
+      };
       const executionPayload = block.message.body.executionPayload;
       setExecutionPayload(executionPayload);
       setWeb3(new Web3(elRpcUrl));
-
-
-      
 
       setReqStatusInit({result: client});
     } catch (e) {
       (e as Error).message = `Error initializing from trusted checkpoint ${checkpointRootHex}: ${(e as Error).message}`;
       setReqStatusInit({error: e as Error});
+      // eslint-disable-next-line no-console
       console.error(e);
     }
   }
@@ -183,10 +188,10 @@ export default function App(): JSX.Element {
     } catch (e) {
       (e as Error).message = `Error initializing from trusted node: ${(e as Error).message}`;
       setReqStatusInit({error: e as Error});
+      // eslint-disable-next-line no-console
       console.error(e);
     }
   }
-
 
   function deleteState() {
     // deleteSnapshot();
@@ -228,6 +233,13 @@ export default function App(): JSX.Element {
 
           <div className="field">
             <div className="control">
+              <p>Execution Rpc URL</p>
+              <input value={elRpcUrl} onChange={(e) => setElRpcUrl(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="field">
+            <div className="control">
               <p>any ethereum address</p>
               <input value={address} onChange={(e) => setAddress(e.target.value)} />
             </div>
@@ -237,28 +249,19 @@ export default function App(): JSX.Element {
               <div className="account">
                 <div className="balance">
                   <span>balance</span>
-                  <input
-                    value={account.balance}
-                    disabled={true}
-                  />
+                  <input value={account.balance} disabled={true} />
                 </div>
                 <div className="nonce">
                   <span>nonce</span>
-                  <input
-                    value={account.nonce}
-                    disabled={true}
-                  />
+                  <input value={account.nonce} disabled={true} />
                 </div>
                 <div className="status">
                   <span>status</span>
-                  <input
-                    value={account.verified?"valid":"invalid"}
-                    disabled={true}
-                  />
+                  <input value={account.verified ? "valid" : "invalid"} disabled={true} />
                 </div>
                 <div className="icon">
                   <div>
-                    <p style={{fontSize:"3em"}}>{account.verified?"✅":"❌"}</p>
+                    <p style={{fontSize: "3em"}}>{account.verified ? "✅" : "❌"}</p>
                   </div>
                 </div>
               </div>
@@ -340,24 +343,35 @@ export default function App(): JSX.Element {
 }
 
 const externalAddressStorageHash = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
-const externalAddressCodeHash= "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470";
+const externalAddressCodeHash = "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470";
 
-async function fetchAndVerifyAddress({web3,executionPayload,address}:{web3:Web3,executionPayload:bellatrix.ExecutionPayload,address:string}):Promise<ParsedAccount> {
-  
-  
-  const params:[string,string[],number] = [address,[],executionPayload.blockNumber];
+async function fetchAndVerifyAddress({
+  web3,
+  executionPayload,
+  address,
+}: {
+  web3: Web3;
+  executionPayload: bellatrix.ExecutionPayload;
+  address: string;
+}): Promise<ParsedAccount> {
+  const params: [string, string[], number] = [address, [], executionPayload.blockNumber];
   const stateRoot = toHexString(executionPayload.stateRoot);
   const proof = await web3.eth.getProof(...params);
-  const {balance,nonce}=proof;
+  const {balance, nonce} = proof;
 
   // Verify the proof, web3 converts nonce and balance into number strings, however
   // ethereumjs verify proof requires them in the original hex format
-  proof.nonce = numberToHex(proof.nonce)
-  proof.balance = numberToHex(proof.balance)
-  const proofStateRoot = toHexString(keccak256(toBuffer(proof.accountProof[0])))
-  const verified = (stateRoot===proofStateRoot) && (proof.storageHash===externalAddressStorageHash) && (proof.codeHash === externalAddressCodeHash) && (await stateManager.verifyProof(proof))
+  proof.nonce = numberToHex(proof.nonce);
+  proof.balance = numberToHex(proof.balance);
 
-  return {balance,nonce,verified}
+  const proofStateRoot = toHexString(keccak256(toBuffer(proof.accountProof[0])));
+  const verified =
+    stateRoot === proofStateRoot &&
+    proof.storageHash === externalAddressStorageHash &&
+    proof.codeHash === externalAddressCodeHash &&
+    (await stateManager.verifyProof(proof));
+
+  return {balance: web3.utils.fromWei(balance, "ether"), nonce, verified};
 
   // console.log("fetched proof",{verified})
   // const accountProof =proof.accountProof.map((rlpString) =>toBuffer(rlpString))
@@ -366,8 +380,8 @@ async function fetchAndVerifyAddress({web3,executionPayload,address}:{web3:Web3,
   // if(value!=null){
   //   console.log("value ", {value})
   // const account = Account.fromRlpSerializedAccount(value)
-  // console.log("account ",{account})     
-  // return account;   
+  // console.log("account ",{account})
+  // return account;
   // }
   // return null;
 }

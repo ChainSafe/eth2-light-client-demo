@@ -103,15 +103,20 @@ export default function App(): JSX.Element {
       client.api.beacon.getBlockV2(blockHash).then((data) => {
         const {data: block} = data as unknown as {data: bellatrix.SignedBeaconBlock};
         const executionPayload = block.message.body.executionPayload;
-        setAccountReqStatus({result: accountReqStatus.result, loading: `Fetching status from ${elRpcUrl}`});
-
-        fetchAndVerifyAddress({web3: web3.current, executionPayload, address})
-          .then((verifiedAccount) => {
-            setAccountReqStatus({result: verifiedAccount});
-          })
-          .catch((e) => {
-            setAccountReqStatus({result: accountReqStatus.result, error: e});
-          });
+        // If the merge not complete, executionPayload would not exists
+        if (!executionPayload) {
+          setAccountReqStatus({result: accountReqStatus.result, loading: `Waiting for an execution payload`});
+          return;
+        } else {
+          setAccountReqStatus({result: accountReqStatus.result, loading: `Fetching status from ${elRpcUrl}`});
+          fetchAndVerifyAddress({web3: web3.current, executionPayload, address})
+            .then((verifiedAccount) => {
+              setAccountReqStatus({result: verifiedAccount});
+            })
+            .catch((e) => {
+              setAccountReqStatus({result: accountReqStatus.result, error: e});
+            });
+        }
       });
     }
   }, [head, address, elRpcUrl]);

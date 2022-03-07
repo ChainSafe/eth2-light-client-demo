@@ -3,7 +3,7 @@ import {getClient} from "@chainsafe/lodestar-api";
 import {Lightclient, LightclientEvent} from "@chainsafe/lodestar-light-client";
 import {init} from "@chainsafe/bls";
 import {fromHexString, toHexString} from "@chainsafe/ssz";
-import {createIChainForkConfig} from "@chainsafe/lodestar-config";
+import {createIChainForkConfig, chainConfigFromJson} from "@chainsafe/lodestar-config";
 import {config as configDefault} from "@chainsafe/lodestar-config/default";
 import Footer from "./components/Footer";
 import {ErrorView} from "./components/ErrorView";
@@ -50,7 +50,7 @@ async function getNetworkData(network: string, beaconApiUrl?: string) {
         genesisTime: Number(genesisData.genesisTime),
         genesisValidatorsRoot: toHexString(genesisData.genesisValidatorsRoot),
       },
-      chainConfig,
+      chainConfig: chainConfigFromJson(chainConfig),
     };
     return networkData;
   }
@@ -75,7 +75,6 @@ export default function App(): JSX.Element {
   const [localAvailable] = useState(false);
   const [head, setHead] = useState<phase0.BeaconBlockHeader>();
   const [latestSyncedPeriod, setLatestSyncedPeriod] = useState<number>();
-  const [executionPayload, setExecutionPayload] = useState<bellatrix.ExecutionPayload>();
   const [address, setAddress] = useState<string>("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
   const [account, setAccount] = useState<ParsedAccount>();
   const [web3, setWeb3] = useState<Web3>();
@@ -92,12 +91,19 @@ export default function App(): JSX.Element {
   }, [network]);
 
   useEffect(() => {
-    if (executionPayload && address && web3) {
-      fetchAndVerifyAddress({web3, executionPayload, address}).then((verifiedAccount) => {
-        setAccount(verifiedAccount);
+    const client = reqStatusInit.result;
+    if (client && head && address && web3) {
+      const blockHash = toHexString(ssz.phase0.BeaconBlockHeader.hashTreeRoot(head));
+      client.api.beacon.getBlockV2(blockHash).then((data) => {
+        const {data: block} = data as unknown as {data: bellatrix.SignedBeaconBlock};
+        const executionPayload = block.message.body.executionPayload;
+
+        fetchAndVerifyAddress({web3, executionPayload, address}).then((verifiedAccount) => {
+          setAccount(verifiedAccount);
+        });
       });
     }
-  }, [executionPayload, address, web3]);
+  }, [head, address, web3]);
 
   // Check if local snapshot is available
   // useEffect(() => {
@@ -156,13 +162,6 @@ export default function App(): JSX.Element {
         checkpointRoot,
       });
 
-      const head = client.getHead();
-      const blockHash = toHexString(ssz.phase0.BeaconBlockHeader.hashTreeRoot(head));
-      const {data: block} = (await client.api.beacon.getBlockV2(blockHash)) as unknown as {
-        data: bellatrix.SignedBeaconBlock;
-      };
-      const executionPayload = block.message.body.executionPayload;
-      setExecutionPayload(executionPayload);
       setWeb3(new Web3(elRpcUrl));
 
       setReqStatusInit({result: client});

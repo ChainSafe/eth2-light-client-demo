@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useState, useRef} from "react";
 import {getClient} from "@chainsafe/lodestar-api";
 import {Lightclient, LightclientEvent} from "@chainsafe/lodestar-light-client";
 import {init} from "@chainsafe/bls";
@@ -76,8 +76,8 @@ export default function App(): JSX.Element {
   const [head, setHead] = useState<phase0.BeaconBlockHeader>();
   const [latestSyncedPeriod, setLatestSyncedPeriod] = useState<number>();
   const [address, setAddress] = useState<string>("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
-  const [account, setAccount] = useState<ParsedAccount>();
-  const [web3, setWeb3] = useState<Web3>();
+  const [accountReqStatus, setAccountReqStatus] = useState<ReqStatus<ParsedAccount, string>>({});
+  const web3 = useRef<Web3>();
 
   useEffect(() => {
     init("herumi").catch((e) => {
@@ -92,18 +92,29 @@ export default function App(): JSX.Element {
 
   useEffect(() => {
     const client = reqStatusInit.result;
-    if (client && head && address && web3) {
+    if (client && head && address && elRpcUrl) {
+      try {
+        if (!web3.current) web3.current = new Web3(elRpcUrl);
+      } catch (e) {
+        setAccountReqStatus({result: accountReqStatus.result, error: e as Error});
+        return;
+      }
       const blockHash = toHexString(ssz.phase0.BeaconBlockHeader.hashTreeRoot(head));
       client.api.beacon.getBlockV2(blockHash).then((data) => {
         const {data: block} = data as unknown as {data: bellatrix.SignedBeaconBlock};
         const executionPayload = block.message.body.executionPayload;
+        setAccountReqStatus({result: accountReqStatus.result, loading: `Fetching status from ${elRpcUrl}`});
 
-        fetchAndVerifyAddress({web3, executionPayload, address}).then((verifiedAccount) => {
-          setAccount(verifiedAccount);
-        });
+        fetchAndVerifyAddress({web3: web3.current, executionPayload, address})
+          .then((verifiedAccount) => {
+            setAccountReqStatus({result: verifiedAccount});
+          })
+          .catch((e) => {
+            setAccountReqStatus({result: accountReqStatus.result, error: e});
+          });
       });
     }
-  }, [head, address, web3]);
+  }, [head, address, elRpcUrl]);
 
   // Check if local snapshot is available
   // useEffect(() => {
@@ -161,8 +172,6 @@ export default function App(): JSX.Element {
         genesisData,
         checkpointRoot,
       });
-
-      setWeb3(new Web3(elRpcUrl));
 
       setReqStatusInit({result: client});
     } catch (e) {
@@ -233,7 +242,13 @@ export default function App(): JSX.Element {
           <div className="field">
             <div className="control">
               <p>Execution Rpc URL</p>
-              <input value={elRpcUrl} onChange={(e) => setElRpcUrl(e.target.value)} />
+              <input
+                value={elRpcUrl}
+                onChange={(e) => {
+                  web3.current = undefined;
+                  setElRpcUrl(e.target.value);
+                }}
+              />
             </div>
           </div>
 
@@ -243,29 +258,44 @@ export default function App(): JSX.Element {
               <input value={address} onChange={(e) => setAddress(e.target.value)} />
             </div>
           </div>
-          {account && (
+          {accountReqStatus.result ? (
             <>
               <div className="account">
                 <div className="balance">
                   <span>balance</span>
-                  <input value={account.balance} disabled={true} />
+                  <input value={accountReqStatus.result.balance} disabled={true} />
                 </div>
                 <div className="nonce">
                   <span>nonce</span>
-                  <input value={account.nonce} disabled={true} />
+                  <input value={accountReqStatus.result.nonce} disabled={true} />
                 </div>
                 <div className="status">
                   <span>status</span>
-                  <input value={account.verified ? "valid" : "invalid"} disabled={true} />
+                  <input value={accountReqStatus.result.verified ? "valid" : "invalid"} disabled={true} />
                 </div>
                 <div className="icon">
-                  <div>
-                    <p style={{fontSize: "3em"}}>{account.verified ? "✅" : "❌"}</p>
-                  </div>
+                  {accountReqStatus.loading ? (
+                    <Loader />
+                  ) : (
+                    <div>
+                      <p style={{fontSize: "3em"}}>
+                        {accountReqStatus.error ? "🛑" : accountReqStatus.result.verified ? "✅" : "❌"}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </>
+          ) : accountReqStatus.loading ? (
+            <>
+              <Loader></Loader>
+              <p>{accountReqStatus.loading}</p>
+            </>
+          ) : (
+            <></>
           )}
+
+          {accountReqStatus.error && <ErrorView error={accountReqStatus.error} />}
 
           <br></br>
 
@@ -349,10 +379,11 @@ async function fetchAndVerifyAddress({
   executionPayload,
   address,
 }: {
-  web3: Web3;
+  web3: Web3 | undefined;
   executionPayload: bellatrix.ExecutionPayload;
   address: string;
 }): Promise<ParsedAccount> {
+  if (!web3) throw Error(`No valid connection to EL`);
   const params: [string, string[], number] = [address, [], executionPayload.blockNumber];
   const stateRoot = toHexString(executionPayload.stateRoot);
   const proof = await web3.eth.getProof(...params);
@@ -371,16 +402,4 @@ async function fetchAndVerifyAddress({
     (await stateManager.verifyProof(proof));
 
   return {balance: web3.utils.fromWei(balance, "ether"), nonce, verified};
-
-  // console.log("fetched proof",{verified})
-  // const accountProof =proof.accountProof.map((rlpString) =>toBuffer(rlpString))
-  // console.log("accountProof",{accountProof})
-  // const value = await SecureTrie.verifyProof(toBuffer(toHexString(executionPayload.stateRoot)), toBuffer(address), accountProof)
-  // if(value!=null){
-  //   console.log("value ", {value})
-  // const account = Account.fromRlpSerializedAccount(value)
-  // console.log("account ",{account})
-  // return account;
-  // }
-  // return null;
 }

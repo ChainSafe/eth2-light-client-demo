@@ -5,6 +5,12 @@ import {init} from "@chainsafe/bls";
 import {fromHexString, toHexString} from "@chainsafe/ssz";
 import {createIChainForkConfig, chainConfigFromJson} from "@chainsafe/lodestar-config";
 import {config as configDefault} from "@chainsafe/lodestar-config/default";
+
+import Web3 from "web3";
+import {Account, toBuffer, keccak256} from "ethereumjs-util";
+import {DefaultStateManager} from "@ethereumjs/vm/dist/state";
+import {numberToHex} from "web3-utils";
+
 import Footer from "./components/Footer";
 import {ErrorView} from "./components/ErrorView";
 import {Loader} from "./components/Loader";
@@ -17,11 +23,6 @@ import {networkGenesis} from "@chainsafe/lodestar-light-client/lib/networks";
 import {networksChainConfig} from "@chainsafe/lodestar-config/networks";
 import {computeSyncPeriodAtSlot} from "@chainsafe/lodestar-light-client/lib/utils/clock";
 import {getLcLoggerConsole} from "@chainsafe/lodestar-light-client/lib/utils/logger";
-import Web3 from "web3";
-import {SecureTrie} from "merkle-patricia-tree";
-import {Account, toBuffer, keccak256} from "ethereumjs-util";
-import {DefaultStateManager} from "@ethereumjs/vm/dist/state";
-import {numberToHex} from "web3-utils";
 
 const networkDefault = "custom";
 const stateManager = new DefaultStateManager();

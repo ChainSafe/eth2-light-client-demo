@@ -63,7 +63,7 @@ function getNetworkUrl(network: string) {
   } else if (network === "prater") {
     return {beaconApiUrl: "https://prater.lodestar.casa", elRpcUrl: "https://praterrpc.lodestar.casa"};
   } else {
-    return {beaconApiUrl: "http://kilnv1.lodestar.casa:32184", elRpcUrl: "http://kilnv1.lodestar.casa:31791"};
+    return {beaconApiUrl: "http://kiln.lodestar.casa", elRpcUrl: "http://kiln.lodestar.casa"};
   }
 }
 

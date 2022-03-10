@@ -73,7 +73,6 @@ export default function App(): JSX.Element {
   const [elRpcUrl, setElRpcUrl] = useState(getNetworkUrl(networkDefault).elRpcUrl);
   const [checkpointRootStr, setCheckpointRootStr] = useState("");
   const [reqStatusInit, setReqStatusInit] = useState<ReqStatus<Lightclient, string>>({});
-  const [localAvailable] = useState(false);
   const [head, setHead] = useState<phase0.BeaconBlockHeader>();
   const [latestSyncedPeriod, setLatestSyncedPeriod] = useState<number>();
   const [address, setAddress] = useState<string>("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
@@ -122,11 +121,6 @@ export default function App(): JSX.Element {
     }
   }, [head, address, elRpcUrl]);
 
-  // Check if local snapshot is available
-  // useEffect(() => {
-  //   setLocalAvailable(hasSnapshot());
-  // }, [reqStatusInit.result]);
-
   useEffect(() => {
     const client = reqStatusInit.result;
     if (!client) return;
@@ -152,8 +146,6 @@ export default function App(): JSX.Element {
       client.emitter.off(LightclientEvent.committee, onNewCommittee);
     };
   }, [reqStatusInit.result]);
-
-  async function initializeFromLocalSnapshot() {}
 
   async function initializeFromCheckpointStr(checkpointRootHex: string) {
     try {
@@ -331,16 +323,6 @@ export default function App(): JSX.Element {
                     </button>
                   </div>
                 </div>
-
-                {localAvailable && (
-                  <div className="field">
-                    <div className="control">
-                      <button className="strong-gradient" onClick={initializeFromLocalSnapshot}>
-                        Initialize from local snapshot
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
             </>
           ) : (

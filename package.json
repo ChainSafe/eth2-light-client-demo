@@ -10,17 +10,20 @@
     "postbuild": "react-snap",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "mock-server": "ts-node mock-server --project ./mock-server/tsconfig.json"
+    "mock-server": "ts-node mock-server --project ./mock-server/tsconfig.json",
+    "lint": "eslint --color --ext .tsx,.ts src/",
+    "lint:fix": "yarn run lint --fix"
   },
   "dependencies": {
     "@chainsafe/bls": "6.0.3",
-    "@chainsafe/lodestar-config": "^0.34.0",
-    "@chainsafe/lodestar-light-client": "^0.34.0",
-    "@chainsafe/lodestar-params": "^0.34.0",
-    "@chainsafe/lodestar-types": "^0.34.0",
-    "@chainsafe/lodestar-utils": "^0.34.0",
+    "@chainsafe/lodestar-config": "^0.35.0-dev.12",
+    "@chainsafe/lodestar-light-client": "^0.35.0-dev.12",
+    "@chainsafe/lodestar-params": "^0.35.0-dev.12",
+    "@chainsafe/lodestar-types": "^0.35.0-dev.12",
+    "@chainsafe/lodestar-utils": "^0.35.0-dev.12",
     "@chainsafe/persistent-merkle-tree": "^0.3.7",
     "@chainsafe/ssz": "^0.8.20",
+    "@ethereumjs/vm": "^5.7.1",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
@@ -33,12 +36,15 @@
     "bulma": "^0.7.5",
     "css-loader": "^2.1.1",
     "debounce": "^1.2.1",
+    "ethereumjs-util": "^7.1.4",
     "lodash": "^4.17.21",
+    "node-sass": "^5.0.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "4.0.3",
     "sass": "^1.49.8",
-    "typescript": "^4.1.2"
+    "typescript": "^4.1.2",
+    "web3": "^1.7.0"
   },
   "eslintConfig": {
     "extends": [
@@ -60,8 +66,12 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.177",
+    "@typescript-eslint/parser": "^5.13.0",
+    "eslint": "^7.14.0",
+    "eslint-plugin-prettier": "^4.0.0",
     "fastify": "^3.24.1",
     "fastify-cors": "^6.0.2",
+    "prettier": "^2.5.1",
     "react-snap": "^1.23.0",
     "ts-node": "^10.4.0"
   }

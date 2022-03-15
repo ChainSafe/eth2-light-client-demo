@@ -91,34 +91,39 @@ export default function App(): JSX.Element {
   }, [network]);
 
   useEffect(() => {
-    const client = reqStatusInit.result;
-    if (client && head && address && elRpcUrl) {
+    async function fetchAndVerifyAccount() {
+      const client = reqStatusInit.result;
+      if (!client || !head || !address || !elRpcUrl) {
+        return;
+      }
+
       try {
         if (!web3.current) web3.current = new Web3(elRpcUrl);
       } catch (e) {
         setAccountReqStatus({result: accountReqStatus.result, error: e as Error});
         return;
       }
+
       const blockHash = toHexString(ssz.phase0.BeaconBlockHeader.hashTreeRoot(head));
-      client.api.beacon.getBlockV2(blockHash).then((data) => {
-        const {data: block} = data as unknown as {data: bellatrix.SignedBeaconBlock};
-        const executionPayload = block.message.body.executionPayload;
-        // If the merge not complete, executionPayload would not exists
-        if (!executionPayload) {
-          setAccountReqStatus({result: accountReqStatus.result, loading: `Waiting for an execution payload`});
-          return;
-        } else {
-          setAccountReqStatus({result: accountReqStatus.result, loading: `Fetching status from ${elRpcUrl}`});
-          fetchAndVerifyAddress({web3: web3.current, executionPayload, address})
-            .then((verifiedAccount) => {
-              setAccountReqStatus({result: verifiedAccount});
-            })
-            .catch((e) => {
-              setAccountReqStatus({result: accountReqStatus.result, error: e});
-            });
-        }
-      });
+      const data = await client.api.beacon.getBlockV2(blockHash)
+      
+      const {data: block} = data as unknown as {data: bellatrix.SignedBeaconBlock};
+      const executionPayload = block.message.body.executionPayload;
+
+      // If the merge not complete, executionPayload would not exists
+      if (!executionPayload) {
+        setAccountReqStatus({result: accountReqStatus.result, loading: `Waiting for an execution payload`});
+        return;
+      } 
+      
+      setAccountReqStatus({result: accountReqStatus.result, loading: `Fetching status from ${elRpcUrl}`});
+      const verifiedAccount = await fetchAndVerifyAddress({web3: web3.current, executionPayload, address})
+      setAccountReqStatus({result: verifiedAccount});
     }
+
+    fetchAndVerifyAccount().catch(e => {
+      setAccountReqStatus({result: accountReqStatus.result, error: e});
+    })
   }, [head, address, elRpcUrl]);
 
   useEffect(() => {

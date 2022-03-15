@@ -105,8 +105,8 @@ export default function App(): JSX.Element {
       }
 
       const blockHash = toHexString(ssz.phase0.BeaconBlockHeader.hashTreeRoot(head));
-      const data = await client.api.beacon.getBlockV2(blockHash)
-      
+      const data = await client.api.beacon.getBlockV2(blockHash);
+
       const {data: block} = data as unknown as {data: bellatrix.SignedBeaconBlock};
       const executionPayload = block.message.body.executionPayload;
 
@@ -114,16 +114,16 @@ export default function App(): JSX.Element {
       if (!executionPayload) {
         setAccountReqStatus({result: accountReqStatus.result, loading: `Waiting for an execution payload`});
         return;
-      } 
-      
+      }
+
       setAccountReqStatus({result: accountReqStatus.result, loading: `Fetching status from ${elRpcUrl}`});
-      const verifiedAccount = await fetchAndVerifyAddress({web3: web3.current, executionPayload, address})
+      const verifiedAccount = await fetchAndVerifyAddress({web3: web3.current, executionPayload, address});
       setAccountReqStatus({result: verifiedAccount});
     }
 
-    fetchAndVerifyAccount().catch(e => {
+    fetchAndVerifyAccount().catch((e) => {
       setAccountReqStatus({result: accountReqStatus.result, error: e});
-    })
+    });
   }, [head, address, elRpcUrl]);
 
   useEffect(() => {

@@ -75,7 +75,7 @@ function getNetworkUrl(network: string) {
   } else if (network === "prater") {
     return {beaconApiUrl: "https://prater.lodestar.casa", elRpcUrl: "https://praterrpc.lodestar.casa"};
   } else {
-    return {beaconApiUrl: "http://kiln.lodestar.casa:30352", elRpcUrl: "http://kiln.lodestar.casa:31122"};
+    return {beaconApiUrl: "http://kiln.lodestar.casa:31890", elRpcUrl: "http://kiln.lodestar.casa:30995"};
   }
 }
 
@@ -118,7 +118,7 @@ export default function App(): JSX.Element {
   const [address, setAddress] = useState<string>("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
   const [accountReqStatus, setAccountReqStatus] = useState<ReqStatus<ParsedAccount, string>>({});
   const [erc20Contracts, setErc20Contracts] = useState<Record<string, ERC20Contract>>({
-    DAI: {contractAddress: "0x6B175474E89094C44Da98b954EedeAC495271d0F", balanceMappingIndex: 2},
+    DAI: {contractAddress: "0x7b4343e96fa21413a8e5A15D67b529D2B9495437", balanceMappingIndex: 2},
   });
   const web3 = useRef<Web3>();
 
@@ -496,8 +496,8 @@ async function fetchAndVerifyAddressBalances({
     const contractProofStateRoot = toHexString(keccak256(toBuffer(contractProof.accountProof[0])));
     // Verify the proof, web3 converts nonce and balance into number strings, however
     // ethereumjs verify proof requires them in the original hex format
-    contractProof.nonce = numberToHex(proof.nonce);
-    contractProof.balance = numberToHex(proof.balance);
+    contractProof.nonce = numberToHex(contractProof.nonce);
+    contractProof.balance = numberToHex(contractProof.balance);
 
     verified =
       verified &&

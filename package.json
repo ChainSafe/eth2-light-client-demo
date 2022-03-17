@@ -24,6 +24,7 @@
     "@chainsafe/persistent-merkle-tree": "^0.3.7",
     "@chainsafe/ssz": "^0.8.20",
     "@ethereumjs/vm": "^5.7.1",
+    "@ethersproject/abi": "^5.6.0",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",

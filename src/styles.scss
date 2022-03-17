@@ -259,6 +259,28 @@ section > .field:not(:last-child) {
 .account {
   display: flex;
   max-width: 33rem;
+  .address {
+    width: 70%;
+    margin-right: 1rem;
+  }
+  .result{
+    width: 30%;
+    display: flex;
+    span {
+      opacity: 0.5;
+    }
+    .nonce{
+      margin-right: 1rem;
+    }
+    .icon{
+      padding-top: 1.8rem;
+    }
+  }
+}
+
+.displaybalance {
+  display: flex;
+  max-width: 33rem;
   .balance {
     width: 35%;
     margin-right: 1rem;

@@ -10,6 +10,7 @@ import Web3 from "web3";
 import {Account, toBuffer, keccak256} from "ethereumjs-util";
 import {DefaultStateManager} from "@ethereumjs/vm/dist/state";
 import {numberToHex} from "web3-utils";
+import {defaultAbiCoder} from "@ethersproject/abi";
 
 import Footer from "./components/Footer";
 import {ErrorView} from "./components/ErrorView";
@@ -26,7 +27,18 @@ import {getLcLoggerConsole} from "@chainsafe/lodestar-light-client/lib/utils/log
 
 const networkDefault = "custom";
 const stateManager = new DefaultStateManager();
-type ParsedAccount = {balance: string; nonce: string; verified: boolean};
+type ParsedAccount = {
+  type: string;
+  balance: string;
+  nonce: string;
+  verified: boolean;
+  tokens: {name: string; balance: string; contractAddress: string}[];
+};
+
+type ERC20Contract = {
+  contractAddress: string;
+  balanceMappingIndex: number;
+};
 
 async function getNetworkData(network: string, beaconApiUrl?: string) {
   if (network === "mainnet") {
@@ -63,8 +75,36 @@ function getNetworkUrl(network: string) {
   } else if (network === "prater") {
     return {beaconApiUrl: "https://prater.lodestar.casa", elRpcUrl: "https://praterrpc.lodestar.casa"};
   } else {
-    return {beaconApiUrl: "http://kiln.lodestar.casa", elRpcUrl: "http://kiln.lodestar.casa"};
+    return {beaconApiUrl: "http://kiln.lodestar.casa:30352", elRpcUrl: "http://kiln.lodestar.casa:31122"};
   }
+}
+
+function DisplayBalance({
+  name,
+  balance,
+  contractAddress,
+}: {
+  name: string;
+  balance: string;
+  contractAddress?: string;
+}): JSX.Element {
+  return (
+    <>
+      <p>
+        <span>{contractAddress}</span>
+      </p>
+      <div className="displaybalance">
+        <div className="balance">
+          <span>Name</span>
+          <input value={name} disabled={true} />
+        </div>
+        <div className="nonce">
+          <span>Balance</span>
+          <input value={balance} disabled={true} />
+        </div>
+      </div>
+    </>
+  );
 }
 
 export default function App(): JSX.Element {
@@ -77,6 +117,9 @@ export default function App(): JSX.Element {
   const [latestSyncedPeriod, setLatestSyncedPeriod] = useState<number>();
   const [address, setAddress] = useState<string>("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
   const [accountReqStatus, setAccountReqStatus] = useState<ReqStatus<ParsedAccount, string>>({});
+  const [erc20Contracts, setErc20Contracts] = useState<Record<string, ERC20Contract>>({
+    DAI: {contractAddress: "0x6B175474E89094C44Da98b954EedeAC495271d0F", balanceMappingIndex: 2},
+  });
   const web3 = useRef<Web3>();
 
   useEffect(() => {
@@ -117,7 +160,12 @@ export default function App(): JSX.Element {
       }
 
       setAccountReqStatus({result: accountReqStatus.result, loading: `Fetching status from ${elRpcUrl}`});
-      const verifiedAccount = await fetchAndVerifyAddress({web3: web3.current, executionPayload, address});
+      const verifiedAccount = await fetchAndVerifyAddressBalances({
+        web3: web3.current,
+        executionPayload,
+        address,
+        erc20Contracts,
+      });
       setAccountReqStatus({result: verifiedAccount});
     }
 
@@ -255,15 +303,50 @@ export default function App(): JSX.Element {
             </div>
           </div>
 
-          <div className="field">
-            <div className="control">
-              <p>any ethereum address</p>
-              <input value={address} onChange={(e) => setAddress(e.target.value)} />
+          <div>
+            <div className="account">
+              <div className="address field">
+                <span>any ethereum address</span>
+                <div className="control">
+                  <input value={address} onChange={(e) => setAddress(e.target.value)} />
+                </div>
+              </div>
+              {accountReqStatus && (
+                <div className="result">
+                  <div className="nonce">
+                    <span>type</span>
+                    <input value={accountReqStatus?.result?.type ?? ""} disabled={true} />
+                  </div>
+
+                  <div className="result icon">
+                    {accountReqStatus.loading ? (
+                      <Loader />
+                    ) : (
+                      <div>
+                        <span>
+                          {accountReqStatus.error || !accountReqStatus.result
+                            ? "error"
+                            : accountReqStatus.result.verified
+                            ? "valid"
+                            : "invalid"}
+                        </span>
+                        <p style={{fontSize: "2em"}}>
+                          {accountReqStatus.error || !accountReqStatus.result
+                            ? "🛑"
+                            : accountReqStatus.result.verified
+                            ? "✅"
+                            : "❌"}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           {accountReqStatus.result ? (
             <>
-              <div className="account">
+              <div className="displaybalance">
                 <div className="balance">
                   <span>balance</span>
                   <input value={accountReqStatus.result.balance} disabled={true} />
@@ -288,6 +371,10 @@ export default function App(): JSX.Element {
                   )}
                 </div>
               </div>
+              <DisplayBalance name={"Ether"} contractAddress={""} balance={accountReqStatus.result.balance} />
+              {accountReqStatus.result.tokens.map((token) => (
+                <DisplayBalance {...token} />
+              ))}
             </>
           ) : accountReqStatus.loading ? (
             <>
@@ -367,19 +454,22 @@ export default function App(): JSX.Element {
 const externalAddressStorageHash = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
 const externalAddressCodeHash = "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470";
 
-async function fetchAndVerifyAddress({
+async function fetchAndVerifyAddressBalances({
   web3,
   executionPayload,
   address,
+  erc20Contracts,
 }: {
   web3: Web3 | undefined;
   executionPayload: bellatrix.ExecutionPayload;
   address: string;
+  erc20Contracts: Record<string, ERC20Contract>;
 }): Promise<ParsedAccount> {
   if (!web3) throw Error(`No valid connection to EL`);
   const params: [string, string[], number] = [address, [], executionPayload.blockNumber];
   const stateRoot = toHexString(executionPayload.stateRoot);
   const proof = await web3.eth.getProof(...params);
+
   const {balance, nonce} = proof;
 
   // Verify the proof, web3 converts nonce and balance into number strings, however
@@ -388,11 +478,44 @@ async function fetchAndVerifyAddress({
   proof.balance = numberToHex(proof.balance);
 
   const proofStateRoot = toHexString(keccak256(toBuffer(proof.accountProof[0])));
-  const verified =
+  let verified =
     stateRoot === proofStateRoot &&
-    proof.storageHash === externalAddressStorageHash &&
-    proof.codeHash === externalAddressCodeHash &&
+    (proof.codeHash !== externalAddressCodeHash || proof.storageHash === externalAddressStorageHash) &&
     (await stateManager.verifyProof(proof));
+  let tokens = [];
 
-  return {balance: web3.utils.fromWei(balance, "ether"), nonce, verified};
+  for (const contractName of Object.keys(erc20Contracts)) {
+    const {contractAddress, balanceMappingIndex} = erc20Contracts[contractName];
+    const balanceSlot = web3.utils.keccak256(
+      defaultAbiCoder.encode(["address", "uint"], [address, balanceMappingIndex])
+    );
+    const contractProof = await web3.eth.getProof(contractAddress, [balanceSlot], executionPayload.blockNumber);
+    if (contractProof.codeHash === externalAddressCodeHash) {
+      throw Error(`No contract deployed at ${contractAddress} for ${contractName}`);
+    }
+    const contractProofStateRoot = toHexString(keccak256(toBuffer(contractProof.accountProof[0])));
+    // Verify the proof, web3 converts nonce and balance into number strings, however
+    // ethereumjs verify proof requires them in the original hex format
+    contractProof.nonce = numberToHex(proof.nonce);
+    contractProof.balance = numberToHex(proof.balance);
+
+    verified =
+      verified &&
+      stateRoot === contractProofStateRoot &&
+      contractProof.storageProof[0]?.key === balanceSlot &&
+      (await stateManager.verifyProof(contractProof));
+    tokens.push({
+      name: contractName,
+      contractAddress,
+      balance: web3.utils.fromWei(web3.utils.hexToNumberString(contractProof.storageProof[0]?.value ?? "0x0")),
+    });
+  }
+
+  return {
+    balance: web3.utils.fromWei(balance, "ether"),
+    nonce,
+    verified,
+    tokens,
+    type: proof.codeHash === externalAddressCodeHash ? "external" : "contract",
+  };
 }

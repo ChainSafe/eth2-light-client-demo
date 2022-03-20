@@ -6,6 +6,12 @@ import {fromHexString, toHexString} from "@chainsafe/ssz";
 import {createIChainForkConfig, chainConfigFromJson} from "@chainsafe/lodestar-config";
 import {config as configDefault} from "@chainsafe/lodestar-config/default";
 
+import {phase0, SyncPeriod, ssz, bellatrix} from "@chainsafe/lodestar-types";
+import {networkGenesis} from "@chainsafe/lodestar-light-client/lib/networks";
+import {networksChainConfig} from "@chainsafe/lodestar-config/networks";
+import {computeSyncPeriodAtSlot} from "@chainsafe/lodestar-light-client/lib/utils/clock";
+import {getLcLoggerConsole} from "@chainsafe/lodestar-light-client/lib/utils/logger";
+
 import Web3 from "web3";
 import {Account, toBuffer, keccak256} from "ethereumjs-util";
 import {DefaultStateManager} from "@ethereumjs/vm/dist/state";
@@ -19,26 +25,10 @@ import {SyncStatus} from "./SyncStatus";
 import {TimeMonitor} from "./TimeMonitor";
 import {ProofReqResp} from "./ProofReqResp";
 import {ReqStatus} from "./types";
-import {phase0, SyncPeriod, ssz, bellatrix} from "@chainsafe/lodestar-types";
-import {networkGenesis} from "@chainsafe/lodestar-light-client/lib/networks";
-import {networksChainConfig} from "@chainsafe/lodestar-config/networks";
-import {computeSyncPeriodAtSlot} from "@chainsafe/lodestar-light-client/lib/utils/clock";
-import {getLcLoggerConsole} from "@chainsafe/lodestar-light-client/lib/utils/logger";
+import {ERC20Contract, DisplayBalance, NewContract, ParsedAccount, DisplayAccount} from "./AccountHelper";
 
 const networkDefault = "custom";
 const stateManager = new DefaultStateManager();
-type ParsedAccount = {
-  type: string;
-  balance: string;
-  nonce: string;
-  verified: boolean;
-  tokens: {name: string; balance: string; contractAddress: string}[];
-};
-
-type ERC20Contract = {
-  contractAddress: string;
-  balanceMappingIndex: number;
-};
 
 async function getNetworkData(network: string, beaconApiUrl?: string) {
   if (network === "mainnet") {
@@ -75,36 +65,8 @@ function getNetworkUrl(network: string) {
   } else if (network === "prater") {
     return {beaconApiUrl: "https://prater.lodestar.casa", elRpcUrl: "https://praterrpc.lodestar.casa"};
   } else {
-    return {beaconApiUrl: "http://kiln.lodestar.casa:31890", elRpcUrl: "http://kiln.lodestar.casa:30995"};
+    return {beaconApiUrl: "http://kiln.lodestar.casa:31890", elRpcUrl: "http://kiln.ethereumjs.casa:30995"};
   }
-}
-
-function DisplayBalance({
-  name,
-  balance,
-  contractAddress,
-}: {
-  name: string;
-  balance: string;
-  contractAddress?: string;
-}): JSX.Element {
-  return (
-    <>
-      <p>
-        <span>{contractAddress}</span>
-      </p>
-      <div className="displaybalance">
-        <div className="balance">
-          <span>Name</span>
-          <input value={name} disabled={true} />
-        </div>
-        <div className="nonce">
-          <span>Balance</span>
-          <input value={balance} disabled={true} />
-        </div>
-      </div>
-    </>
-  );
 }
 
 export default function App(): JSX.Element {
@@ -172,7 +134,7 @@ export default function App(): JSX.Element {
     fetchAndVerifyAccount().catch((e) => {
       setAccountReqStatus({result: accountReqStatus.result, error: e});
     });
-  }, [head, address, elRpcUrl]);
+  }, [head, address, elRpcUrl, erc20Contracts]);
 
   useEffect(() => {
     const client = reqStatusInit.result;
@@ -311,7 +273,7 @@ export default function App(): JSX.Element {
                   <input value={address} onChange={(e) => setAddress(e.target.value)} />
                 </div>
               </div>
-              {accountReqStatus && (
+              {(accountReqStatus.result || accountReqStatus.error) && (
                 <div className="result">
                   <div className="nonce">
                     <span>type</span>
@@ -345,37 +307,11 @@ export default function App(): JSX.Element {
             </div>
           </div>
           {accountReqStatus.result ? (
-            <>
-              <div className="displaybalance">
-                <div className="balance">
-                  <span>balance</span>
-                  <input value={accountReqStatus.result.balance} disabled={true} />
-                </div>
-                <div className="nonce">
-                  <span>nonce</span>
-                  <input value={accountReqStatus.result.nonce} disabled={true} />
-                </div>
-                <div className="status">
-                  <span>status</span>
-                  <input value={accountReqStatus.result.verified ? "valid" : "invalid"} disabled={true} />
-                </div>
-                <div className="icon">
-                  {accountReqStatus.loading ? (
-                    <Loader />
-                  ) : (
-                    <div>
-                      <p style={{fontSize: "3em"}}>
-                        {accountReqStatus.error ? "🛑" : accountReqStatus.result.verified ? "✅" : "❌"}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <DisplayBalance name={"Ether"} contractAddress={""} balance={accountReqStatus.result.balance} />
-              {accountReqStatus.result.tokens.map((token) => (
-                <DisplayBalance {...token} />
-              ))}
-            </>
+            <DisplayAccount
+              account={accountReqStatus.result}
+              erc20Contracts={erc20Contracts}
+              setErc20Contracts={setErc20Contracts}
+            />
           ) : accountReqStatus.loading ? (
             <>
               <Loader></Loader>
@@ -384,11 +320,8 @@ export default function App(): JSX.Element {
           ) : (
             <></>
           )}
-
           {accountReqStatus.error && <ErrorView error={accountReqStatus.error} />}
-
           <br></br>
-
           {!reqStatusInit.result ? (
             <>
               <div>
@@ -427,13 +360,10 @@ export default function App(): JSX.Element {
             </div>
           )}
         </section>
-
         {reqStatusInit.result ? (
           <>
             <TimeMonitor client={reqStatusInit.result} />
-
             <SyncStatus client={reqStatusInit.result} head={head} latestSyncedPeriod={latestSyncedPeriod} />
-
             {head !== undefined && <ProofReqResp client={reqStatusInit.result} head={head} />}
           </>
         ) : reqStatusInit.error ? (

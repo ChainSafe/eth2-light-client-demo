@@ -4,7 +4,7 @@ FROM node:16.14.0 as build
 WORKDIR /app
 # install app dependencies
 COPY package.json ./
-RUN yarn install
+RUN yarn install --frozen-lockfile --ignore-optional
 # add app
 COPY . ./
 

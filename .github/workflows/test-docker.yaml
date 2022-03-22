@@ -1,0 +1,26 @@
+name: Test-Docker
+on: [push, pull_request]
+
+env:
+    DOCKER_IMAGE_NAME: 'lodestar:${{ github.sha }}'
+jobs:
+  build-test:
+    name: Build
+    runs-on: ubuntu-latest
+
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install Task
+      uses: arduino/setup-task@v1
+
+    - name: Build docker Image
+      run: task docker:build
+    
+    - name: Run docker Image
+      run: task docker:run
+    
+    - name: Check docker container
+      run: task check-header

@@ -26,4 +26,4 @@ tasks:
       - docker run -itd -p 8080:80 {{ .DOCKER_IMAGE_NAME }}
   check-header:
     cmds:
-      - curl -Is localhost:8000 | grep "200"
+      - curl -Is localhost:8080 | grep "200"

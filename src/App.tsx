@@ -3,13 +3,18 @@ import {getClient} from "@chainsafe/lodestar-api";
 import {Lightclient, LightclientEvent} from "@chainsafe/lodestar-light-client";
 import {init} from "@chainsafe/bls";
 import {fromHexString, toHexString} from "@chainsafe/ssz";
-import {createIChainForkConfig, chainConfigFromJson} from "@chainsafe/lodestar-config";
+import {createIChainForkConfig} from "@chainsafe/lodestar-config";
 import {config as configDefault} from "@chainsafe/lodestar-config/default";
+
+import {phase0, SyncPeriod, ssz, bellatrix} from "@chainsafe/lodestar-types";
+import {computeSyncPeriodAtSlot} from "@chainsafe/lodestar-light-client/lib/utils/clock";
+import {getLcLoggerConsole} from "@chainsafe/lodestar-light-client/lib/utils/logger";
 
 import Web3 from "web3";
 import {Account, toBuffer, keccak256} from "ethereumjs-util";
 import {DefaultStateManager} from "@ethereumjs/vm/dist/state";
 import {numberToHex} from "web3-utils";
+import {defaultAbiCoder} from "@ethersproject/abi";
 
 import Footer from "./components/Footer";
 import {ErrorView} from "./components/ErrorView";
@@ -18,65 +23,31 @@ import {SyncStatus} from "./SyncStatus";
 import {TimeMonitor} from "./TimeMonitor";
 import {ProofReqResp} from "./ProofReqResp";
 import {ReqStatus} from "./types";
-import {phase0, SyncPeriod, ssz, bellatrix} from "@chainsafe/lodestar-types";
-import {networkGenesis} from "@chainsafe/lodestar-light-client/lib/networks";
-import {networksChainConfig} from "@chainsafe/lodestar-config/networks";
-import {computeSyncPeriodAtSlot} from "@chainsafe/lodestar-light-client/lib/utils/clock";
-import {getLcLoggerConsole} from "@chainsafe/lodestar-light-client/lib/utils/logger";
+import {
+  NetworkName,
+  networkDefault,
+  getNetworkData,
+  defaultNetworkUrls,
+  defaultNetworkTokens,
+  ERC20Contract,
+} from "./Networks";
+import {ParsedAccount, DisplayAccount} from "./AccountHelper";
 
-const networkDefault = "custom";
 const stateManager = new DefaultStateManager();
-type ParsedAccount = {balance: string; nonce: string; verified: boolean};
-
-async function getNetworkData(network: string, beaconApiUrl?: string) {
-  if (network === "mainnet") {
-    return {
-      genesisData: networkGenesis.mainnet,
-      chainConfig: networksChainConfig.mainnet,
-    };
-  } else if (network === "prater") {
-    return {
-      genesisData: networkGenesis.prater,
-      chainConfig: networksChainConfig.prater,
-    };
-  } else {
-    if (!beaconApiUrl) {
-      throw Error(`Unknown network: ${network}, requires beaconApiUrl to load config`);
-    }
-    const api = getClient(configDefault, {baseUrl: beaconApiUrl});
-    const {data: genesisData} = await api.beacon.getGenesis();
-    const {data: chainConfig} = await api.config.getSpec();
-    const networkData = {
-      genesisData: {
-        genesisTime: Number(genesisData.genesisTime),
-        genesisValidatorsRoot: toHexString(genesisData.genesisValidatorsRoot),
-      },
-      chainConfig: chainConfigFromJson(chainConfig),
-    };
-    return networkData;
-  }
-}
-
-function getNetworkUrl(network: string) {
-  if (network === "mainnet") {
-    return {beaconApiUrl: "https://mainnet.lodestar.casa", elRpcUrl: "https://mainnet.lodestar.casa"};
-  } else if (network === "prater") {
-    return {beaconApiUrl: "https://prater.lodestar.casa", elRpcUrl: "https://praterrpc.lodestar.casa"};
-  } else {
-    return {beaconApiUrl: "http://kiln.lodestar.casa", elRpcUrl: "http://kiln.lodestar.casa"};
-  }
-}
 
 export default function App(): JSX.Element {
-  const [network, setNetwork] = useState(networkDefault);
-  const [beaconApiUrl, setBeaconApiUrl] = useState(getNetworkUrl(networkDefault).beaconApiUrl);
-  const [elRpcUrl, setElRpcUrl] = useState(getNetworkUrl(networkDefault).elRpcUrl);
+  const [network, setNetwork] = useState<NetworkName>(networkDefault);
+  const [beaconApiUrl, setBeaconApiUrl] = useState(defaultNetworkUrls[networkDefault].beaconApiUrl);
+  const [elRpcUrl, setElRpcUrl] = useState(defaultNetworkUrls[networkDefault].elRpcUrl);
   const [checkpointRootStr, setCheckpointRootStr] = useState("");
   const [reqStatusInit, setReqStatusInit] = useState<ReqStatus<Lightclient, string>>({});
   const [head, setHead] = useState<phase0.BeaconBlockHeader>();
   const [latestSyncedPeriod, setLatestSyncedPeriod] = useState<number>();
   const [address, setAddress] = useState<string>("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
   const [accountReqStatus, setAccountReqStatus] = useState<ReqStatus<ParsedAccount, string>>({});
+  const [erc20Contracts, setErc20Contracts] = useState<Record<string, ERC20Contract>>(
+    defaultNetworkTokens[networkDefault].full
+  );
   const web3 = useRef<Web3>();
 
   useEffect(() => {
@@ -86,8 +57,8 @@ export default function App(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    setBeaconApiUrl(getNetworkUrl(network).beaconApiUrl);
-    setElRpcUrl(getNetworkUrl(network).elRpcUrl);
+    setBeaconApiUrl(defaultNetworkUrls[network].beaconApiUrl);
+    setElRpcUrl(defaultNetworkUrls[network].elRpcUrl);
   }, [network]);
 
   useEffect(() => {
@@ -117,14 +88,19 @@ export default function App(): JSX.Element {
       }
 
       setAccountReqStatus({result: accountReqStatus.result, loading: `Fetching status from ${elRpcUrl}`});
-      const verifiedAccount = await fetchAndVerifyAddress({web3: web3.current, executionPayload, address});
+      const verifiedAccount = await fetchAndVerifyAddressBalances({
+        web3: web3.current,
+        executionPayload,
+        address,
+        erc20Contracts,
+      });
       setAccountReqStatus({result: verifiedAccount});
     }
 
     fetchAndVerifyAccount().catch((e) => {
       setAccountReqStatus({result: accountReqStatus.result, error: e});
     });
-  }, [head, address, elRpcUrl]);
+  }, [head, address, elRpcUrl, erc20Contracts]);
 
   useEffect(() => {
     const client = reqStatusInit.result;
@@ -227,10 +203,12 @@ export default function App(): JSX.Element {
           <div className="field">
             <div className="control">
               <p>Network</p>
-              <select onChange={(e) => setNetwork(e.target.value)} value={network}>
-                <option value="mainnet">mainnet</option>
-                <option value="prater">prater</option>
-                <option value="custom">custom</option>
+              <select onChange={(e) => setNetwork(e.target.value as NetworkName)} value={network}>
+                {Object.entries(NetworkName).map(([_networkKey, networkValue]) => (
+                  <option key={networkValue} value={networkValue}>
+                    {networkValue}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -255,40 +233,54 @@ export default function App(): JSX.Element {
             </div>
           </div>
 
-          <div className="field">
-            <div className="control">
-              <p>any ethereum address</p>
-              <input value={address} onChange={(e) => setAddress(e.target.value)} />
+          <div>
+            <div className="account">
+              <div className="address field">
+                <span>any ethereum address</span>
+                <div className="control">
+                  <input value={address} onChange={(e) => setAddress(e.target.value)} />
+                </div>
+              </div>
+              {(accountReqStatus.result || accountReqStatus.error) && (
+                <div className="result">
+                  <div className="nonce">
+                    <span>type</span>
+                    <input value={accountReqStatus?.result?.type ?? ""} disabled={true} />
+                  </div>
+
+                  <div className="result icon">
+                    {accountReqStatus.loading ? (
+                      <Loader />
+                    ) : (
+                      <div>
+                        <span>
+                          {accountReqStatus.error || !accountReqStatus.result
+                            ? "error"
+                            : accountReqStatus.result.verified
+                            ? "valid"
+                            : "invalid"}
+                        </span>
+                        <p style={{fontSize: "2em"}}>
+                          {accountReqStatus.error || !accountReqStatus.result
+                            ? "🛑"
+                            : accountReqStatus.result.verified
+                            ? "✅"
+                            : "❌"}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           {accountReqStatus.result ? (
-            <>
-              <div className="account">
-                <div className="balance">
-                  <span>balance</span>
-                  <input value={accountReqStatus.result.balance} disabled={true} />
-                </div>
-                <div className="nonce">
-                  <span>nonce</span>
-                  <input value={accountReqStatus.result.nonce} disabled={true} />
-                </div>
-                <div className="status">
-                  <span>status</span>
-                  <input value={accountReqStatus.result.verified ? "valid" : "invalid"} disabled={true} />
-                </div>
-                <div className="icon">
-                  {accountReqStatus.loading ? (
-                    <Loader />
-                  ) : (
-                    <div>
-                      <p style={{fontSize: "3em"}}>
-                        {accountReqStatus.error ? "🛑" : accountReqStatus.result.verified ? "✅" : "❌"}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </>
+            <DisplayAccount
+              account={accountReqStatus.result}
+              erc20Contracts={erc20Contracts}
+              setErc20Contracts={setErc20Contracts}
+              network={network}
+            />
           ) : accountReqStatus.loading ? (
             <>
               <Loader></Loader>
@@ -297,11 +289,8 @@ export default function App(): JSX.Element {
           ) : (
             <></>
           )}
-
           {accountReqStatus.error && <ErrorView error={accountReqStatus.error} />}
-
           <br></br>
-
           {!reqStatusInit.result ? (
             <>
               <div>
@@ -340,13 +329,10 @@ export default function App(): JSX.Element {
             </div>
           )}
         </section>
-
         {reqStatusInit.result ? (
           <>
             <TimeMonitor client={reqStatusInit.result} />
-
             <SyncStatus client={reqStatusInit.result} head={head} latestSyncedPeriod={latestSyncedPeriod} />
-
             {head !== undefined && <ProofReqResp client={reqStatusInit.result} head={head} />}
           </>
         ) : reqStatusInit.error ? (
@@ -367,19 +353,22 @@ export default function App(): JSX.Element {
 const externalAddressStorageHash = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
 const externalAddressCodeHash = "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470";
 
-async function fetchAndVerifyAddress({
+async function fetchAndVerifyAddressBalances({
   web3,
   executionPayload,
   address,
+  erc20Contracts,
 }: {
   web3: Web3 | undefined;
   executionPayload: bellatrix.ExecutionPayload;
   address: string;
+  erc20Contracts: Record<string, ERC20Contract>;
 }): Promise<ParsedAccount> {
   if (!web3) throw Error(`No valid connection to EL`);
   const params: [string, string[], number] = [address, [], executionPayload.blockNumber];
   const stateRoot = toHexString(executionPayload.stateRoot);
   const proof = await web3.eth.getProof(...params);
+
   const {balance, nonce} = proof;
 
   // Verify the proof, web3 converts nonce and balance into number strings, however
@@ -388,11 +377,44 @@ async function fetchAndVerifyAddress({
   proof.balance = numberToHex(proof.balance);
 
   const proofStateRoot = toHexString(keccak256(toBuffer(proof.accountProof[0])));
-  const verified =
+  let verified =
     stateRoot === proofStateRoot &&
-    proof.storageHash === externalAddressStorageHash &&
-    proof.codeHash === externalAddressCodeHash &&
+    (proof.codeHash !== externalAddressCodeHash || proof.storageHash === externalAddressStorageHash) &&
     (await stateManager.verifyProof(proof));
+  let tokens = [];
 
-  return {balance: web3.utils.fromWei(balance, "ether"), nonce, verified};
+  for (const contractName of Object.keys(erc20Contracts)) {
+    const {contractAddress, balanceMappingIndex} = erc20Contracts[contractName];
+    const balanceSlot = web3.utils.keccak256(
+      defaultAbiCoder.encode(["address", "uint"], [address, balanceMappingIndex])
+    );
+    const contractProof = await web3.eth.getProof(contractAddress, [balanceSlot], executionPayload.blockNumber);
+    if (contractProof.codeHash === externalAddressCodeHash) {
+      throw Error(`No contract deployed at ${contractAddress} for ${contractName}`);
+    }
+    const contractProofStateRoot = toHexString(keccak256(toBuffer(contractProof.accountProof[0])));
+    // Verify the proof, web3 converts nonce and balance into number strings, however
+    // ethereumjs verify proof requires them in the original hex format
+    contractProof.nonce = numberToHex(contractProof.nonce);
+    contractProof.balance = numberToHex(contractProof.balance);
+
+    verified =
+      verified &&
+      stateRoot === contractProofStateRoot &&
+      contractProof.storageProof[0]?.key === balanceSlot &&
+      (await stateManager.verifyProof(contractProof));
+    tokens.push({
+      name: contractName,
+      contractAddress,
+      balance: web3.utils.fromWei(web3.utils.hexToNumberString(contractProof.storageProof[0]?.value ?? "0x0")),
+    });
+  }
+
+  return {
+    balance: web3.utils.fromWei(balance, "ether"),
+    nonce,
+    verified,
+    tokens,
+    type: proof.codeHash === externalAddressCodeHash ? "external" : "contract",
+  };
 }

@@ -1,17 +1,13 @@
 import React, {useEffect, useMemo, useState} from "react";
 import {ErrorView} from "./components/ErrorView";
-
-export type ERC20Contract = {
-  contractAddress: string;
-  balanceMappingIndex: number;
-};
+import {ERC20Contract, NetworkName, defaultNetworkTokens} from "./Networks";
 
 enum FormAction {
   Form = "form",
   Action = "action",
 }
 
-export type NewContract = {
+export type NewContractForm = {
   state: FormAction;
   data: {name: string} & ERC20Contract;
   error?: Error;
@@ -25,7 +21,7 @@ export type ParsedAccount = {
   tokens: {name: string; balance: string; contractAddress: string}[];
 };
 
-function defaultNewContract(): NewContract {
+function defaultNewContract(): NewContractForm {
   return {
     state: FormAction.Action,
     data: {name: "", contractAddress: "", balanceMappingIndex: 0},
@@ -36,10 +32,12 @@ export function DisplayAccount({
   account,
   erc20Contracts,
   setErc20Contracts,
+  network,
 }: {
   account: ParsedAccount;
   erc20Contracts: Record<string, ERC20Contract>;
   setErc20Contracts: (_records: Record<string, ERC20Contract>) => void;
+  network: NetworkName;
 }): JSX.Element {
   return (
     <>
@@ -53,7 +51,7 @@ export function DisplayAccount({
           }}
         />
       ))}
-      <NewContract erc20Contracts={erc20Contracts} setErc20Contracts={setErc20Contracts} />
+      <NewContract erc20Contracts={erc20Contracts} setErc20Contracts={setErc20Contracts} network={network} />
     </>
   );
 }
@@ -95,11 +93,14 @@ export function DisplayBalance({
 function NewContract({
   erc20Contracts,
   setErc20Contracts,
+  network,
 }: {
   erc20Contracts: Record<string, ERC20Contract>;
   setErc20Contracts: (_records: Record<string, ERC20Contract>) => void;
+  network: NetworkName;
 }): JSX.Element {
-  const [newContract, setNewContract] = useState<NewContract>(defaultNewContract());
+  const [newContract, setNewContract] = useState<NewContractForm>(defaultNewContract());
+  const [selectedToken, setSelectedToken] = useState<string>("custom");
 
   return (
     <>
@@ -114,6 +115,31 @@ function NewContract({
         </span>
       ) : (
         <div>
+          <select
+            onChange={(e) => {
+              if (e.target.value !== "custom") {
+                setNewContract({
+                  state: FormAction.Form,
+                  data: {...defaultNetworkTokens[network].partial[e.target.value], name: e.target.value},
+                });
+              } else {
+                setNewContract({...defaultNewContract(), state: FormAction.Form});
+              }
+              setSelectedToken(e.target.value);
+            }}
+            value={selectedToken}
+          >
+            {Object.keys(defaultNetworkTokens[network].partial)
+              .filter((defaultToken) => !erc20Contracts[defaultToken])
+              .map((defaultToken) => (
+                <option key={defaultToken} value={defaultToken}>
+                  {defaultToken}
+                </option>
+              ))}
+            <option key="custom" value="custom">
+              custom
+            </option>
+          </select>
           <p>Token Name</p>
           <input
             value={newContract.data.name}

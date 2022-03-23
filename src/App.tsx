@@ -3,12 +3,10 @@ import {getClient} from "@chainsafe/lodestar-api";
 import {Lightclient, LightclientEvent} from "@chainsafe/lodestar-light-client";
 import {init} from "@chainsafe/bls";
 import {fromHexString, toHexString} from "@chainsafe/ssz";
-import {createIChainForkConfig, chainConfigFromJson} from "@chainsafe/lodestar-config";
+import {createIChainForkConfig} from "@chainsafe/lodestar-config";
 import {config as configDefault} from "@chainsafe/lodestar-config/default";
 
 import {phase0, SyncPeriod, ssz, bellatrix} from "@chainsafe/lodestar-types";
-import {networkGenesis} from "@chainsafe/lodestar-light-client/lib/networks";
-import {networksChainConfig} from "@chainsafe/lodestar-config/networks";
 import {computeSyncPeriodAtSlot} from "@chainsafe/lodestar-light-client/lib/utils/clock";
 import {getLcLoggerConsole} from "@chainsafe/lodestar-light-client/lib/utils/logger";
 
@@ -25,63 +23,31 @@ import {SyncStatus} from "./SyncStatus";
 import {TimeMonitor} from "./TimeMonitor";
 import {ProofReqResp} from "./ProofReqResp";
 import {ReqStatus} from "./types";
-import {ERC20Contract, DisplayBalance, NewContract, ParsedAccount, DisplayAccount} from "./AccountHelper";
+import {
+  NetworkName,
+  networkDefault,
+  getNetworkData,
+  defaultNetworkUrls,
+  defaultNetworkTokens,
+  ERC20Contract,
+} from "./Networks";
+import {ParsedAccount, DisplayAccount} from "./AccountHelper";
 
-const networkDefault = "custom";
 const stateManager = new DefaultStateManager();
 
-async function getNetworkData(network: string, beaconApiUrl?: string) {
-  if (network === "mainnet") {
-    return {
-      genesisData: networkGenesis.mainnet,
-      chainConfig: networksChainConfig.mainnet,
-    };
-  } else if (network === "prater") {
-    return {
-      genesisData: networkGenesis.prater,
-      chainConfig: networksChainConfig.prater,
-    };
-  } else {
-    if (!beaconApiUrl) {
-      throw Error(`Unknown network: ${network}, requires beaconApiUrl to load config`);
-    }
-    const api = getClient(configDefault, {baseUrl: beaconApiUrl});
-    const {data: genesisData} = await api.beacon.getGenesis();
-    const {data: chainConfig} = await api.config.getSpec();
-    const networkData = {
-      genesisData: {
-        genesisTime: Number(genesisData.genesisTime),
-        genesisValidatorsRoot: toHexString(genesisData.genesisValidatorsRoot),
-      },
-      chainConfig: chainConfigFromJson(chainConfig),
-    };
-    return networkData;
-  }
-}
-
-function getNetworkUrl(network: string) {
-  if (network === "mainnet") {
-    return {beaconApiUrl: "https://mainnet.lodestar.casa", elRpcUrl: "https://mainnet.lodestar.casa"};
-  } else if (network === "prater") {
-    return {beaconApiUrl: "https://prater.lodestar.casa", elRpcUrl: "https://praterrpc.lodestar.casa"};
-  } else {
-    return {beaconApiUrl: "http://kiln.lodestar.casa:31890", elRpcUrl: "http://kiln.ethereumjs.casa:30995"};
-  }
-}
-
 export default function App(): JSX.Element {
-  const [network, setNetwork] = useState(networkDefault);
-  const [beaconApiUrl, setBeaconApiUrl] = useState(getNetworkUrl(networkDefault).beaconApiUrl);
-  const [elRpcUrl, setElRpcUrl] = useState(getNetworkUrl(networkDefault).elRpcUrl);
+  const [network, setNetwork] = useState<NetworkName>(networkDefault);
+  const [beaconApiUrl, setBeaconApiUrl] = useState(defaultNetworkUrls[networkDefault].beaconApiUrl);
+  const [elRpcUrl, setElRpcUrl] = useState(defaultNetworkUrls[networkDefault].elRpcUrl);
   const [checkpointRootStr, setCheckpointRootStr] = useState("");
   const [reqStatusInit, setReqStatusInit] = useState<ReqStatus<Lightclient, string>>({});
   const [head, setHead] = useState<phase0.BeaconBlockHeader>();
   const [latestSyncedPeriod, setLatestSyncedPeriod] = useState<number>();
   const [address, setAddress] = useState<string>("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
   const [accountReqStatus, setAccountReqStatus] = useState<ReqStatus<ParsedAccount, string>>({});
-  const [erc20Contracts, setErc20Contracts] = useState<Record<string, ERC20Contract>>({
-    DAI: {contractAddress: "0x7b4343e96fa21413a8e5A15D67b529D2B9495437", balanceMappingIndex: 2},
-  });
+  const [erc20Contracts, setErc20Contracts] = useState<Record<string, ERC20Contract>>(
+    defaultNetworkTokens[networkDefault].full
+  );
   const web3 = useRef<Web3>();
 
   useEffect(() => {
@@ -91,8 +57,8 @@ export default function App(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    setBeaconApiUrl(getNetworkUrl(network).beaconApiUrl);
-    setElRpcUrl(getNetworkUrl(network).elRpcUrl);
+    setBeaconApiUrl(defaultNetworkUrls[network].beaconApiUrl);
+    setElRpcUrl(defaultNetworkUrls[network].elRpcUrl);
   }, [network]);
 
   useEffect(() => {
@@ -237,10 +203,12 @@ export default function App(): JSX.Element {
           <div className="field">
             <div className="control">
               <p>Network</p>
-              <select onChange={(e) => setNetwork(e.target.value)} value={network}>
-                <option value="mainnet">mainnet</option>
-                <option value="prater">prater</option>
-                <option value="custom">custom</option>
+              <select onChange={(e) => setNetwork(e.target.value as NetworkName)} value={network}>
+                {Object.entries(NetworkName).map(([_networkKey, networkValue]) => (
+                  <option key={networkValue} value={networkValue}>
+                    {networkValue}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -311,6 +279,7 @@ export default function App(): JSX.Element {
               account={accountReqStatus.result}
               erc20Contracts={erc20Contracts}
               setErc20Contracts={setErc20Contracts}
+              network={network}
             />
           ) : accountReqStatus.loading ? (
             <>

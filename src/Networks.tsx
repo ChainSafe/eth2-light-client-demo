@@ -47,9 +47,9 @@ export async function getNetworkData(network: NetworkName, beaconApiUrl?: string
 }
 
 export const defaultNetworkUrls: Record<NetworkName, {beaconApiUrl: string; elRpcUrl: string}> = {
-  [NetworkName.mainnet]: {beaconApiUrl: "https://mainnet.lodestar.casa", elRpcUrl: "https://mainnet.lodestar.casa"},
-  [NetworkName.prater]: {beaconApiUrl: "https://prater.lodestar.casa", elRpcUrl: "https://praterrpc.lodestar.casa"},
-  [NetworkName.kiln]: {beaconApiUrl: "https://kiln.lodestar.casa", elRpcUrl: "https://kilnrpc.lodestar.casa"},
+  [NetworkName.mainnet]: {beaconApiUrl: process.env.REACT_APP_MAINNET_API || "https://mainnet.lodestar.casa", elRpcUrl: process.env.REACT_APP_MAINNET_API || "https://mainnet.lodestar.casa"},
+  [NetworkName.prater]: {beaconApiUrl: process.env.REACT_APP_PRATER_API || "https://prater.lodestar.casa", elRpcUrl: process.env.REACT_APP_PRATER_API || "https://praterrpc.lodestar.casa"},
+  [NetworkName.kiln]: {beaconApiUrl: process.env.REACT_APP_KILN_API || "https://kiln.lodestar.casa", elRpcUrl: process.env.REACT_APP_KILN_API || "https://kilnrpc.lodestar.casa"},
   [NetworkName.custom]: {beaconApiUrl: "", elRpcUrl: ""},
 };
 

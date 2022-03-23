@@ -5,13 +5,14 @@ version: '3'
 vars:
   REACT_APP_MAINNET_API: $(echo "$REACT_APP_MAINNET_API")
   REACT_APP_PRATER_API: $(echo "$REACT_APP_PRATER_API")
+  REACT_APP_KILN_API: $(echo "$REACT_APP_KILN_API")
   DOCKER_IMAGE_NAME: $(echo "$DOCKER_IMAGE_NAME")
   NEW_DOCKER_IMAGE_NAME: $(echo "$NEW_DOCKER_IMAGE_NAME")
   PUSH_DOCKER_IMAGE_NAME: $(echo "$PUSH_DOCKER_IMAGE_NAME")
 tasks:
   docker:build:
     cmds:
-      - docker build --build-arg REACT_APP_MAINNET_API={{ .REACT_APP_MAINNET_API }} --build-arg REACT_APP_PRATER_API={{ .REACT_APP_PRATER_API }} --no-cache -t {{ .DOCKER_IMAGE_NAME }} .
+      - docker build --build-arg REACT_APP_MAINNET_API={{ .REACT_APP_MAINNET_API }} --build-arg REACT_APP_PRATER_API={{ .REACT_APP_PRATER_API }} --build-arg REACT_APP_KILN_API={{ .REACT_APP_KILN_API }} --no-cache -t {{ .DOCKER_IMAGE_NAME }} .
 
   docker:tag:
     cmds:

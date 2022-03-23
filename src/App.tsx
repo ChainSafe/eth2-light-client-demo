@@ -34,52 +34,6 @@ import {
 import {ParsedAccount, DisplayAccount} from "./AccountHelper";
 
 const stateManager = new DefaultStateManager();
-type ParsedAccount = {balance: string; nonce: string; verified: boolean};
-
-async function getNetworkData(network: string, beaconApiUrl?: string) {
-  if (network === "mainnet") {
-    return {
-      genesisData: networkGenesis.mainnet,
-      chainConfig: networksChainConfig.mainnet,
-    };
-  } else if (network === "prater") {
-    return {
-      genesisData: networkGenesis.prater,
-      chainConfig: networksChainConfig.prater,
-    };
-  } else {
-    if (!beaconApiUrl) {
-      throw Error(`Unknown network: ${network}, requires beaconApiUrl to load config`);
-    }
-    const api = getClient(configDefault, {baseUrl: beaconApiUrl});
-    const {data: genesisData} = await api.beacon.getGenesis();
-    const {data: chainConfig} = await api.config.getSpec();
-    const networkData = {
-      genesisData: {
-        genesisTime: Number(genesisData.genesisTime),
-        genesisValidatorsRoot: toHexString(genesisData.genesisValidatorsRoot),
-      },
-      chainConfig: chainConfigFromJson(chainConfig),
-    };
-    return networkData;
-  }
-}
-
-function getNetworkUrl(network: string) {
-  if (network === "mainnet") {
-    return {
-      beaconApiUrl: process.env.REACT_APP_MAINNET_API || "https://mainnet.lodestar.casa",
-      elRpcUrl: "https://mainnet.lodestar.casa",
-    };
-  } else if (network === "prater") {
-    return {
-      beaconApiUrl: process.env.REACT_APP_MAINNET_API || "https://prater.lodestar.casa",
-      elRpcUrl: "https://praterrpc.lodestar.casa",
-    };
-  } else {
-    return {beaconApiUrl: "http://kiln.lodestar.casa", elRpcUrl: "http://kiln.lodestar.casa"};
-  }
-}
 
 export default function App(): JSX.Element {
   const [network, setNetwork] = useState<NetworkName>(networkDefault);

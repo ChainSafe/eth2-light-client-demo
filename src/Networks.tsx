@@ -22,12 +22,12 @@ export async function getNetworkData(network: NetworkName, beaconApiUrl?: string
   switch (network) {
     case NetworkName.mainnet:
     case NetworkName.prater:
+    case NetworkName.kiln:
       return {
         genesisData: networkGenesis[network],
         chainConfig: networksChainConfig[network],
       };
 
-    case NetworkName.kiln:
     default:
       if (!beaconApiUrl) {
         throw Error(`Unknown network: ${network}, requires beaconApiUrl to load config`);
@@ -62,7 +62,7 @@ export const DefaultTokensMeta: Record<
 > = {
   [DefaultTokens.DAI]: {
     balanceMappingIndex: 2,
-    addresses: {[NetworkName.custom]: "0x7b4343e96fa21413a8e5A15D67b529D2B9495437"},
+    addresses: {[NetworkName.kiln]: "0x7b4343e96fa21413a8e5A15D67b529D2B9495437"},
   },
 };
 

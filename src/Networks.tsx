@@ -48,12 +48,12 @@ export async function getNetworkData(network: NetworkName, beaconApiUrl?: string
 
 export const defaultNetworkUrls: Record<NetworkName, {beaconApiUrl: string; elRpcUrl: string}> = {
   [NetworkName.mainnet]: {
-    beaconApiUrl: process.env.REACT_APP_MAINNET_BEACON_API || "https://mainnet.lodestar.casa",
-    elRpcUrl: process.env.REACT_APP_MAINNET_EXECUTION_API || "https://mainnetrpc.lodestar.casa",
+    beaconApiUrl: process.env.REACT_APP_MAINNET_BEACON_API || "https://lodestar-mainnet.chainsafe.io",
+    elRpcUrl: process.env.REACT_APP_MAINNET_EXECUTION_API || "https://lodestar-mainnetrpc.chainsafe.io",
   },
   [NetworkName.prater]: {
-    beaconApiUrl: process.env.REACT_APP_PRATER_BEACON_API || "https://prater.lodestar.casa",
-    elRpcUrl: process.env.REACT_APP_PRATER_EXECUTION_API || "https://praterrpc.lodestar.casa",
+    beaconApiUrl: process.env.REACT_APP_PRATER_BEACON_API || "https://lodestar-prater.chainsafe.io",
+    elRpcUrl: process.env.REACT_APP_PRATER_EXECUTION_API || "https://lodestar-praterrpc.chainsafe.io",
   },
   [NetworkName.kiln]: {
     beaconApiUrl: process.env.REACT_APP_KILN_BEACON_API || "https://kiln.lodestar.casa",

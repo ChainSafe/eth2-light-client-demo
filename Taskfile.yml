@@ -1,0 +1,31 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  REACT_APP_MAINNET_BEACON_API: $(echo "$REACT_APP_MAINNET_BEACON_API")
+  REACT_APP_PRATER_BEACON_API: $(echo "$REACT_APP_PRATER_BEACON_API")
+  REACT_APP_KILN_BEACON_API: $(echo "$REACT_APP_KILN_BEACON_API")
+  REACT_APP_KILN_EXECUTION_API: $(echo "REACT_APP_KILN_EXECUTION_API")
+  DOCKER_IMAGE_NAME: $(echo "$DOCKER_IMAGE_NAME")
+  NEW_DOCKER_IMAGE_NAME: $(echo "$NEW_DOCKER_IMAGE_NAME")
+  PUSH_DOCKER_IMAGE_NAME: $(echo "$PUSH_DOCKER_IMAGE_NAME")
+tasks:
+  docker:build:
+    cmds:
+      - docker build --build-arg REACT_APP_MAINNET_BEACON_API={{ .REACT_APP_MAINNET_BEACON_API }} --build-arg REACT_APP_PRATER_BEACON_API={{ .REACT_APP_PRATER_BEACON_API }} --build-arg REACT_APP_KILN_BEACON_API={{ .REACT_APP_KILN_BEACON_API }} --build-arg REACT_APP_KILN_EXECUTION_API={{ .REACT_APP_KILN_EXECUTION_API }} --no-cache -t {{ .DOCKER_IMAGE_NAME }} .
+
+  docker:tag:
+    cmds:
+      - docker tag {{ .DOCKER_IMAGE_NAME }} {{ .NEW_DOCKER_IMAGE_NAME }}
+  
+  docker:push:
+    cmds:
+      - docker push {{ .PUSH_DOCKER_IMAGE_NAME }}
+
+  docker:run:
+    cmds:
+      - docker run -itd -p 8080:80 {{ .DOCKER_IMAGE_NAME }}
+  check-header:
+    cmds:
+      - curl -Is localhost:8080 | grep "200"

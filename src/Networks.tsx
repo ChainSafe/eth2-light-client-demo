@@ -56,8 +56,8 @@ export const defaultNetworkUrls: Record<NetworkName, {beaconApiUrl: string; elRp
     elRpcUrl: process.env.REACT_APP_PRATER_EXECUTION_API || "https://lodestar-praterrpc.chainsafe.io",
   },
   [NetworkName.kiln]: {
-    beaconApiUrl: process.env.REACT_APP_KILN_BEACON_API || "https://lodestar-kiln.chainsafe.io/",
-    elRpcUrl: process.env.REACT_APP_KILN_EXECUTION_API || "https://lodestar-kilnrpc.chainsafe.io/",
+    beaconApiUrl: process.env.REACT_APP_KILN_BEACON_API || "https://lodestar-kiln.chainsafe.io",
+    elRpcUrl: process.env.REACT_APP_KILN_EXECUTION_API || "https://lodestar-kilnrpc.chainsafe.io",
   },
   [NetworkName.custom]: {beaconApiUrl: "", elRpcUrl: ""},
 };

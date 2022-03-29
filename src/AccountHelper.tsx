@@ -175,7 +175,7 @@ function NewContract({
                   });
                   return;
                 }
-                const hexPattern = new RegExp(/^(0x|0X)?(?<tokenHex>[a-fA-F0-9]{40})$/, "g");
+                const hexPattern = new RegExp(/^(0x|0X)?(?<tokenHex>[a-fA-F0-9]{40})$/);
                 if (!hexPattern.exec(newContract.data.contractAddress)?.groups?.tokenHex) {
                   setNewContract({...newContract, error: Error("Invalid contract address")});
                   return;

@@ -33,6 +33,9 @@ import {
 } from "./Networks";
 import {ParsedAccount, DisplayAccount} from "./AccountHelper";
 
+import {Noise} from "@chainsafe/libp2p-noise";
+const noiseIns = new Noise();
+
 const stateManager = new DefaultStateManager();
 
 export default function App(): JSX.Element {

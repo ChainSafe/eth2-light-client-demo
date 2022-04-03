@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@chainsafe/bls": "6.0.3",
+    "@chainsafe/libp2p-noise": "^6.0.1",
     "@chainsafe/lodestar-config": "^0.35.0-dev.34",
     "@chainsafe/lodestar-light-client": "^0.35.0-dev.34",
     "@chainsafe/lodestar-params": "^0.35.0-dev.34",
@@ -24,6 +25,10 @@
     "@chainsafe/ssz": "^0.8.20",
     "@ethereumjs/vm": "^5.7.1",
     "@ethersproject/abi": "^5.6.0",
+    "@libp2p/bootstrap": "^1.0.2",
+    "@libp2p/mplex": "^1.0.2",
+    "@libp2p/webrtc-star": "^1.0.6",
+    "@libp2p/websockets": "^1.0.3",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",

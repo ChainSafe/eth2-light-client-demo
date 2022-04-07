@@ -2,8 +2,8 @@ import React, {useEffect, useMemo, useState} from "react";
 import throttle from "lodash/throttle";
 import {Lightclient} from "@chainsafe/lodestar-light-client";
 import {TreeOffsetProof} from "@chainsafe/persistent-merkle-tree";
-import {allForks, phase0} from "@chainsafe/lodestar-types";
-import {CompositeType, toHexString, TreeBacked} from "@chainsafe/ssz";
+import {allForks, phase0, ssz} from "@chainsafe/lodestar-types";
+import {CompositeType, toHexString, CompositeView} from "@chainsafe/ssz";
 import {ReqStatus} from "./types";
 import {ErrorView} from "./components/ErrorView";
 
@@ -32,8 +32,8 @@ export function ProofReqResp({client, head}: {client: Lightclient; head: phase0.
           if (proof.leaves.length <= 0) {
             throw Error("Empty proof");
           }
-          const state = client.config.getForkTypes(header.slot).BeaconState.createTreeBackedFromProofUnsafe(proof);
-          const stateStr = renderState(pathsQueried, state ?? null);
+          const state = client.config.getForkTypes(header.slot).BeaconState.createFromProof(proof);
+          const stateStr = state ? renderState(pathsQueried, state) : [];
           setReqStatusProof({result: {proof, stateStr}});
         } catch (e) {
           setReqStatusProof({error: e as Error});
@@ -110,7 +110,12 @@ export function ProofReqResp({client, head}: {client: Lightclient; head: phase0.
   );
 }
 
-function renderState(paths: Path[], state: TreeBacked<allForks.BeaconState> | null): StateRender {
+type TreeBackedState =
+  | CompositeView<typeof ssz.phase0.BeaconState>
+  | CompositeView<typeof ssz.altair.BeaconState>
+  | CompositeView<typeof ssz.bellatrix.BeaconState>;
+
+function renderState(paths: Path[], state: TreeBackedState): StateRender {
   if (!state) return [];
   return paths.map((path) => ({
     key: path.join("."),
@@ -118,11 +123,11 @@ function renderState(paths: Path[], state: TreeBacked<allForks.BeaconState> | nu
   }));
 }
 
-function getStateData(state: TreeBacked<allForks.BeaconState>, path: Path): string {
+function getStateData(state: TreeBackedState, path: Path): string {
   let value = state as object;
-  let type = state.type as CompositeType<object>;
+  let type = state.type as CompositeType<object, unknown, unknown>;
   for (const indexer of path) {
-    type = type.getPropertyType(indexer) as CompositeType<object>;
+    type = type.getPropertyType(indexer) as CompositeType<object, unknown, unknown>;
     value = (value as Record<string, unknown>)[String(indexer)] as object;
   }
   try {

@@ -15,13 +15,13 @@
   },
   "dependencies": {
     "@chainsafe/bls": "6.0.3",
-    "@chainsafe/lodestar-config": "^0.35.0-dev.46",
-    "@chainsafe/lodestar-light-client": "^0.35.0-dev.46",
-    "@chainsafe/lodestar-params": "^0.35.0-dev.46",
-    "@chainsafe/lodestar-types": "^0.35.0-dev.46",
-    "@chainsafe/lodestar-utils": "^0.35.0-dev.46",
-    "@chainsafe/persistent-merkle-tree": "^0.4.0",
-    "@chainsafe/ssz": "^0.9.0",
+    "@chainsafe/lodestar-config": "^0.35.0-dev.67",
+    "@chainsafe/lodestar-light-client": "^0.35.0-dev.67",
+    "@chainsafe/lodestar-params": "^0.35.0-dev.67",
+    "@chainsafe/lodestar-types": "^0.35.0-dev.67",
+    "@chainsafe/lodestar-utils": "^0.35.0-dev.67",
+    "@chainsafe/persistent-merkle-tree": "^0.4.1",
+    "@chainsafe/ssz": "^0.9.1",
     "@ethereumjs/vm": "^5.7.1",
     "@ethersproject/abi": "^5.6.0",
     "@testing-library/jest-dom": "^5.11.4",
@@ -52,18 +52,11 @@
       "react-app/jest"
     ]
   },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
+  "browserslist": [
       "last 1 chrome version",
       "last 1 firefox version",
       "last 1 safari version"
-    ]
-  },
+  ],
   "devDependencies": {
     "@babel/plugin-proposal-nullish-coalescing-operator": "^7.16.7",
     "@babel/plugin-proposal-optional-chaining": "^7.16.7",

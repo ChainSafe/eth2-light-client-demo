@@ -32,7 +32,7 @@ export async function getNetworkData(network: NetworkName, beaconApiUrl?: string
       if (!beaconApiUrl) {
         throw Error(`Unknown network: ${network}, requires beaconApiUrl to load config`);
       }
-      const api = getClient(configDefault, {baseUrl: beaconApiUrl});
+      const api = getClient({baseUrl: beaconApiUrl}, {config: configDefault});
       const {data: genesisData} = await api.beacon.getGenesis();
       const {data: chainConfig} = await api.config.getSpec();
       const networkData = {

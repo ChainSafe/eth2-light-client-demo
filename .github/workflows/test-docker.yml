@@ -17,5 +17,3 @@ jobs:
         run: task docker:build
       - name: Run docker Image
         run: task docker:run
-      - name: Check docker container
-        run: task check-header

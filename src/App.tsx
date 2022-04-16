@@ -1,8 +1,8 @@
 import React, {useEffect, useState, useRef} from "react";
+import {fromHexString, toHexString} from "@chainsafe/ssz";
 import {getClient} from "@chainsafe/lodestar-api";
 import {Lightclient, LightclientEvent} from "@chainsafe/lodestar-light-client";
 import {init} from "@chainsafe/bls";
-import {fromHexString, toHexString} from "@chainsafe/ssz";
 import {createIChainForkConfig} from "@chainsafe/lodestar-config";
 import {config as configDefault} from "@chainsafe/lodestar-config/default";
 
@@ -165,7 +165,7 @@ export default function App(): JSX.Element {
     try {
       setReqStatusInit({loading: "Fetching checkpoint from trusted node"});
 
-      const client = getClient(configDefault, {baseUrl: beaconApiUrl});
+      const client = getClient({baseUrl: beaconApiUrl}, {config: configDefault});
       const res = await client.beacon.getStateFinalityCheckpoints("head");
       const finalizedCheckpoint = res.data.finalized;
       setCheckpointRootStr(toHexString(finalizedCheckpoint.root));

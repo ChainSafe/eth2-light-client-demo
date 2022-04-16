@@ -5,9 +5,9 @@
   "author": "Chainsafe Systems",
   "license": "MIT",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test",
     "eject": "react-scripts eject",
     "mock-server": "ts-node mock-server --project ./mock-server/tsconfig.json",
     "lint": "eslint --color --ext .tsx,.ts src/",
@@ -15,13 +15,13 @@
   },
   "dependencies": {
     "@chainsafe/bls": "6.0.3",
-    "@chainsafe/lodestar-config": "^0.35.0-dev.34",
-    "@chainsafe/lodestar-light-client": "^0.35.0-dev.34",
-    "@chainsafe/lodestar-params": "^0.35.0-dev.34",
-    "@chainsafe/lodestar-types": "^0.35.0-dev.34",
-    "@chainsafe/lodestar-utils": "^0.35.0-dev.34",
-    "@chainsafe/persistent-merkle-tree": "^0.3.7",
-    "@chainsafe/ssz": "^0.8.20",
+    "@chainsafe/lodestar-config": "^0.35.0-dev.67",
+    "@chainsafe/lodestar-light-client": "^0.35.0-dev.67",
+    "@chainsafe/lodestar-params": "^0.35.0-dev.67",
+    "@chainsafe/lodestar-types": "^0.35.0-dev.67",
+    "@chainsafe/lodestar-utils": "^0.35.0-dev.67",
+    "@chainsafe/persistent-merkle-tree": "^0.4.1",
+    "@chainsafe/ssz": "^0.9.1",
     "@ethereumjs/vm": "^5.7.1",
     "@ethersproject/abi": "^5.6.0",
     "@testing-library/jest-dom": "^5.11.4",
@@ -52,19 +52,15 @@
       "react-app/jest"
     ]
   },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
+  "browserslist": [
       "last 1 chrome version",
       "last 1 firefox version",
       "last 1 safari version"
-    ]
-  },
+  ],
   "devDependencies": {
+    "@babel/plugin-proposal-nullish-coalescing-operator": "^7.16.7",
+    "@babel/plugin-proposal-optional-chaining": "^7.16.7",
+    "@craco/craco": "^6.4.3",
     "@types/lodash": "^4.14.177",
     "@typescript-eslint/parser": "^5.13.0",
     "eslint": "^7.14.0",

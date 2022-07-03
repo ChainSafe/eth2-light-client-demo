@@ -1,9 +1,9 @@
-import {networkGenesis} from "@chainsafe/lodestar-light-client/lib/networks";
+import {networkGenesis} from "@chainsafe/lodestar-light-client/networks";
 import {networksChainConfig} from "@chainsafe/lodestar-config/networks";
 import {getClient} from "@chainsafe/lodestar-api";
 import {config as configDefault} from "@chainsafe/lodestar-config/default";
 import {toHexString} from "@chainsafe/ssz";
-import {createIChainForkConfig, chainConfigFromJson} from "@chainsafe/lodestar-config";
+import {chainConfigFromJson} from "@chainsafe/lodestar-config";
 
 export enum NetworkName {
   mainnet = "mainnet",

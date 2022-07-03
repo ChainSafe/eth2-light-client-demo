@@ -1,10 +1,10 @@
 import crypto from "crypto";
 import {routes, Api} from "@chainsafe/lodestar-api";
-import {init} from "@chainsafe/bls";
+import init from "@chainsafe/bls";
 import {createIBeaconConfig} from "@chainsafe/lodestar-config";
 import {chainConfig as chainConfigDef} from "@chainsafe/lodestar-config/default";
-import {toHexString, TreeBacked} from "@chainsafe/ssz";
-import {computeSyncPeriodAtSlot} from "@chainsafe/lodestar-light-client/lib/utils/clock";
+import {toHexString} from "@chainsafe/ssz";
+import {computeSyncPeriodAtSlot} from "@chainsafe/lodestar-light-client/utils";
 import {allForks, phase0, ssz} from "@chainsafe/lodestar-types";
 import {EventsServerApi, LightclientServerApi, ServerOpts, startServer} from "./server";
 import {

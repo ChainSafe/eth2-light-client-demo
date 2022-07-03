@@ -2,16 +2,16 @@ import React, {useEffect, useState, useRef} from "react";
 import {fromHexString, toHexString} from "@chainsafe/ssz";
 import {getClient} from "@chainsafe/lodestar-api";
 import {Lightclient, LightclientEvent} from "@chainsafe/lodestar-light-client";
-import {init} from "@chainsafe/bls";
+import init from "@chainsafe/bls";
 import {createIChainForkConfig} from "@chainsafe/lodestar-config";
 import {config as configDefault} from "@chainsafe/lodestar-config/default";
 
 import {phase0, SyncPeriod, ssz, bellatrix} from "@chainsafe/lodestar-types";
-import {computeSyncPeriodAtSlot} from "@chainsafe/lodestar-light-client/lib/utils/clock";
-import {getLcLoggerConsole} from "@chainsafe/lodestar-light-client/lib/utils/logger";
+import {computeSyncPeriodAtSlot} from "@chainsafe/lodestar-light-client/clock";
+import {getLcLoggerConsole} from "@chainsafe/lodestar-light-client/logger";
 
 import Web3 from "web3";
-import {Account, toBuffer, keccak256} from "ethereumjs-util";
+import {toBuffer, keccak256} from "ethereumjs-util";
 import {DefaultStateManager} from "@ethereumjs/vm/dist/state";
 import {numberToHex} from "web3-utils";
 import {defaultAbiCoder} from "@ethersproject/abi";

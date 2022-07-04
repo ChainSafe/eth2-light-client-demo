@@ -7,8 +7,8 @@ import {createIChainForkConfig} from "@chainsafe/lodestar-config";
 import {config as configDefault} from "@chainsafe/lodestar-config/default";
 
 import {phase0, SyncPeriod, ssz, bellatrix} from "@chainsafe/lodestar-types";
-import {computeSyncPeriodAtSlot} from "@chainsafe/lodestar-light-client/clock";
-import {getLcLoggerConsole} from "@chainsafe/lodestar-light-client/logger";
+import {computeSyncPeriodAtSlot} from "@chainsafe/lodestar-light-client/utils";
+import {getLcLoggerConsole} from "@chainsafe/lodestar-light-client/utils";
 
 import Web3 from "web3";
 import {toBuffer, keccak256} from "ethereumjs-util";

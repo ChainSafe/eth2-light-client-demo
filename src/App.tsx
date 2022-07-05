@@ -2,7 +2,6 @@ import React, {useEffect, useState, useRef} from "react";
 import {fromHexString, toHexString} from "@chainsafe/ssz";
 import {getClient} from "@chainsafe/lodestar-api";
 import {Lightclient, LightclientEvent} from "@chainsafe/lodestar-light-client";
-import init from "@chainsafe/bls";
 import {createIChainForkConfig} from "@chainsafe/lodestar-config";
 import {config as configDefault} from "@chainsafe/lodestar-config/default";
 
@@ -49,12 +48,6 @@ export default function App(): JSX.Element {
     defaultNetworkTokens[networkDefault].full
   );
   const web3 = useRef<Web3>();
-
-  useEffect(() => {
-    init("herumi").catch((e) => {
-      setReqStatusInit({error: e});
-    });
-  }, []);
 
   useEffect(() => {
     setBeaconApiUrl(defaultNetworkUrls[network].beaconApiUrl);

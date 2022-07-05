@@ -1,4 +1,5 @@
-import {PointFormat, PublicKey, SecretKey, Signature} from "@chainsafe/bls";
+import {PublicKey, SecretKey, Signature} from "@chainsafe/bls/herumi";
+import {PointFormat} from "@chainsafe/bls/types";
 import {routes} from "@chainsafe/lodestar-api";
 import {IBeaconConfig} from "@chainsafe/lodestar-config";
 import {

@@ -1,6 +1,5 @@
 import crypto from "crypto";
 import {routes, Api} from "@chainsafe/lodestar-api";
-import init from "@chainsafe/bls";
 import {createIBeaconConfig} from "@chainsafe/lodestar-config";
 import {chainConfig as chainConfigDef} from "@chainsafe/lodestar-config/default";
 import {toHexString} from "@chainsafe/ssz";
@@ -33,9 +32,6 @@ async function run(): Promise<void> {
   const genesisValidatorsRoot = Buffer.alloc(32, 0xaa);
   const config = createIBeaconConfig({...chainConfig, ALTAIR_FORK_EPOCH}, genesisValidatorsRoot);
 
-  // Start bls
-  await init("herumi");
-
   // Create server impl mock backed
   const lightclientServerApi = new LightclientServerApi();
   const eventsServerApi = new EventsServerApi();
@@ -62,7 +58,7 @@ async function run(): Promise<void> {
     checkpointRoot: toHexString(checkpointRoot),
   });
 
-  const state = ssz.altair.BeaconState.defaultTreeBacked();
+  const state = ssz.altair.BeaconState.defaultView();
 
   for (let slot = 0; true; slot++) {
     const period = computeSyncPeriodAtSlot(slot);

@@ -10,6 +10,9 @@ module.exports = {
     },
     webpack: {
         configure: {
+            module: {
+                exprContextCritical: false, // turns off Critical dependency: the request of a dependency is an expression error
+            },
             experiments: {
                 topLevelAwait: true,
             },

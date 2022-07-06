@@ -26,11 +26,6 @@ module.exports = {
                     "fs": false
                 }
             }
-        },
-        plugins: [
-                new webpack.DefinePlugin({
-                    process: {env: {}}
-                }),
-            ]
+        }
     }
 }

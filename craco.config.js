@@ -17,15 +17,16 @@ module.exports = {
       },
       resolve: {
         fallback: {
-          crypto: false,
+          '@chainsafe/blst': false, // @chainsafe/blst is a peer dependency which is not needed in a browser environment
           http: require.resolve("stream-http"),
           https: require.resolve("https-browserify"),
+          crypto: false,
           stream: false,
           url: false,
           os: false,
           path: false,
           zlib: false,
-          fs: false,
+          fs: false
         },
       },
     },

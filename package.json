@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "@chainsafe/bls": "7.1.1",
-    "@chainsafe/blst": "0.2.4",
     "@chainsafe/lodestar-api": "0.40.0-dev.0b4c4bf39a",
     "@chainsafe/lodestar-config": "0.40.0-dev.0b4c4bf39a",
     "@chainsafe/lodestar-light-client": "0.40.0-dev.0b4c4bf39a",

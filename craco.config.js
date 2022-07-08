@@ -32,7 +32,7 @@ module.exports = {
     },
     plugins: [
       new webpack.DefinePlugin({
-        process: { env: {}, argv: [] },
+        process: { argv: [] },
       }),
       new webpack.ProvidePlugin({
         Buffer: ["buffer", "Buffer"],

@@ -11,7 +11,7 @@ import {getLcLoggerConsole} from "@chainsafe/lodestar-light-client/utils";
 
 import Web3 from "web3";
 import {toBuffer, keccak256} from "ethereumjs-util";
-import {DefaultStateManager} from "@ethereumjs/vm/dist/state";
+import {DefaultStateManager} from "@ethereumjs/statemanager";
 import {numberToHex} from "web3-utils";
 import {defaultAbiCoder} from "@ethersproject/abi";
 

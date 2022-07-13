@@ -1,4 +1,5 @@
-import {PointFormat, PublicKey, SecretKey, Signature} from "@chainsafe/bls";
+import {PublicKey, SecretKey, Signature} from "@chainsafe/bls/herumi";
+import {PointFormat} from "@chainsafe/bls/types";
 import {routes} from "@chainsafe/lodestar-api";
 import {IBeaconConfig} from "@chainsafe/lodestar-config";
 import {
@@ -14,9 +15,9 @@ import {
 import {altair, phase0, Slot, ssz, SyncPeriod} from "@chainsafe/lodestar-types";
 import {hash} from "@chainsafe/persistent-merkle-tree";
 import {fromHexString, List} from "@chainsafe/ssz";
-import {SyncCommitteeFast} from "@chainsafe/lodestar-light-client/lib/types";
-import {computeSigningRoot} from "@chainsafe/lodestar-light-client/lib/utils/domain";
-import {getLcLoggerConsole} from "@chainsafe/lodestar-light-client/lib/utils/logger";
+import {SyncCommitteeFast} from "@chainsafe/lodestar-light-client";
+import {computeSigningRoot} from "@chainsafe/lodestar-light-client/domain";
+import {getLcLoggerConsole} from "@chainsafe/lodestar-light-client/logger";
 
 const CURRENT_SYNC_COMMITTEE_INDEX = 22;
 const CURRENT_SYNC_COMMITTEE_DEPTH = 5;

@@ -1,6 +1,6 @@
 import React from "react";
 import {Lightclient} from "@chainsafe/lodestar-light-client";
-import {computeSyncPeriodAtSlot} from "@chainsafe/lodestar-light-client/lib/utils/clock";
+import {computeSyncPeriodAtSlot} from "@chainsafe/lodestar-light-client/utils";
 import {phase0, SyncPeriod} from "@chainsafe/lodestar-types";
 import {toHexString} from "@chainsafe/ssz";
 

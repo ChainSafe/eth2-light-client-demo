@@ -124,11 +124,15 @@ function renderState(paths: Path[], state: TreeBackedState): StateRender {
 }
 
 function getStateData(state: TreeBackedState, path: Path): string {
-  let value = state as object;
+  let value = state as Record<string, any>;
   let type = state.type as CompositeType<object, unknown, unknown>;
   for (const indexer of path) {
     type = type.getPropertyType(indexer) as CompositeType<object, unknown, unknown>;
-    value = (value as Record<string, unknown>)[String(indexer)] as object;
+    if (value["get"] !== undefined) {
+      value = value.get(String(indexer)) as object;
+    } else {
+      value = value[String(indexer)] as object;
+    }
   }
   try {
     return JSON.stringify(type.toJson(value.valueOf()), null, 2);

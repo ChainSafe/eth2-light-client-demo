@@ -1,10 +1,10 @@
 import crypto from "crypto";
-import {routes, Api} from "@chainsafe/lodestar-api";
-import {createIBeaconConfig} from "@chainsafe/lodestar-config";
-import {chainConfig as chainConfigDef} from "@chainsafe/lodestar-config/default";
+import {routes, Api} from "@lodestar/api";
+import {createIBeaconConfig} from "@lodestar/config";
+import {chainConfig as chainConfigDef} from "@lodestar/config/default";
 import {toHexString} from "@chainsafe/ssz";
-import {computeSyncPeriodAtSlot} from "@chainsafe/lodestar-light-client/utils";
-import {allForks, phase0, ssz} from "@chainsafe/lodestar-types";
+import {computeSyncPeriodAtSlot} from "@lodestar/light-client/utils";
+import {allForks, phase0, ssz} from "@lodestar/types";
 import {EventsServerApi, LightclientServerApi, ServerOpts, startServer} from "./server";
 import {
   computeLightClientSnapshot,
@@ -13,7 +13,7 @@ import {
   SLOTS_PER_PERIOD,
   SOME_HASH,
 } from "./utils";
-import {ACTIVE_PRESET} from "@chainsafe/lodestar-params";
+import {ACTIVE_PRESET} from "@lodestar/params";
 
 async function run(): Promise<void> {
   const ALTAIR_FORK_EPOCH = 0;

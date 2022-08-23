@@ -1,13 +1,13 @@
 import React, {useEffect, useState, useRef} from "react";
 import {fromHexString, toHexString} from "@chainsafe/ssz";
-import {getClient} from "@chainsafe/lodestar-api";
-import {Lightclient, LightclientEvent} from "@chainsafe/lodestar-light-client";
-import {createIChainForkConfig} from "@chainsafe/lodestar-config";
-import {config as configDefault} from "@chainsafe/lodestar-config/default";
+import {getClient} from "@lodestar/api";
+import {Lightclient, LightclientEvent} from "@lodestar/light-client";
+import {createIChainForkConfig} from "@lodestar/config";
+import {config as configDefault} from "@lodestar/config/default";
 
-import {phase0, SyncPeriod, ssz, bellatrix} from "@chainsafe/lodestar-types";
-import {computeSyncPeriodAtSlot} from "@chainsafe/lodestar-light-client/utils";
-import {getLcLoggerConsole} from "@chainsafe/lodestar-light-client/utils";
+import {phase0, SyncPeriod, ssz, bellatrix} from "@lodestar/types";
+import {computeSyncPeriodAtSlot} from "@lodestar/light-client/utils";
+import {getLcLoggerConsole} from "@lodestar/light-client/utils";
 
 import Web3 from "web3";
 import {toBuffer, keccak256} from "ethereumjs-util";

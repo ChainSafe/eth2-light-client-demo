@@ -20,7 +20,7 @@ export default function Footer(): JSX.Element {
       <div className="content has-text-centered is-small is-family-code">
         <div>
           <a className="is-link has-text-grey" href="https://www.npmjs.com/package/@chainsafe/lodestar">
-            @chainsafe/lodestar {pkg.dependencies["@chainsafe/lodestar-config"]}
+            @chainsafe/lodestar {pkg.dependencies["@lodestar/config"]}
           </a>
         </div>
       </div>

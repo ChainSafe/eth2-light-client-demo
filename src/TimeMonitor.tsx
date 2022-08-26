@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from "react";
-import {EPOCHS_PER_SYNC_COMMITTEE_PERIOD, SLOTS_PER_EPOCH} from "@chainsafe/lodestar-params";
-import {Lightclient} from "@chainsafe/lodestar-light-client";
+import {EPOCHS_PER_SYNC_COMMITTEE_PERIOD, SLOTS_PER_EPOCH} from "@lodestar/params";
+import {Lightclient} from "@lodestar/light-client";
 
 export function TimeMonitor({client}: {client: Lightclient}): JSX.Element {
   const [, setCounter] = useState<number>();

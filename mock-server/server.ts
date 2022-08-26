@@ -1,11 +1,11 @@
 import fastify, {FastifyInstance, FastifyError} from "fastify";
-import {Api, routes} from "@chainsafe/lodestar-api";
-import {registerRoutes} from "@chainsafe/lodestar-api/server";
+import {Api, routes} from "@lodestar/api";
+import {registerRoutes} from "@lodestar/api/server";
 import fastifyCors from "fastify-cors";
 import querystring from "querystring";
-import {IChainForkConfig} from "@chainsafe/lodestar-config";
+import {IChainForkConfig} from "@lodestar/config";
 import {Path, TreeBacked} from "@chainsafe/ssz";
-import {allForks, altair, RootHex, SyncPeriod} from "@chainsafe/lodestar-types";
+import {allForks, altair, RootHex, SyncPeriod} from "@lodestar/types";
 import {Proof} from "@chainsafe/persistent-merkle-tree";
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */

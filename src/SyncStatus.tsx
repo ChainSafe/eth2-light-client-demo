@@ -1,7 +1,7 @@
 import React from "react";
-import {Lightclient} from "@chainsafe/lodestar-light-client";
-import {computeSyncPeriodAtSlot} from "@chainsafe/lodestar-light-client/utils";
-import {phase0, SyncPeriod} from "@chainsafe/lodestar-types";
+import {Lightclient} from "@lodestar/light-client";
+import {computeSyncPeriodAtSlot} from "@lodestar/light-client/utils";
+import {phase0, SyncPeriod} from "@lodestar/types";
 import {toHexString} from "@chainsafe/ssz";
 
 export function SyncStatus({

@@ -8,6 +8,7 @@ import {chainConfigFromJson} from "@lodestar/config";
 export enum NetworkName {
   mainnet = "mainnet",
   goerli = "goerli",
+  sepolia = "sepolia",
   custom = "custom",
 }
 export const networkDefault = NetworkName.mainnet;
@@ -21,6 +22,7 @@ export async function getNetworkData(network: NetworkName, beaconApiUrl?: string
   switch (network) {
     case NetworkName.mainnet:
     case NetworkName.goerli:
+    case NetworkName.sepolia:
       return {
         genesisData: networkGenesis[network],
         chainConfig: networksChainConfig[network],
@@ -52,6 +54,10 @@ export const defaultNetworkUrls: Record<NetworkName, {beaconApiUrl: string; elRp
   [NetworkName.goerli]: {
     beaconApiUrl: process.env.REACT_APP_PRATER_BEACON_API || "https://lodestar-goerli.chainsafe.io",
     elRpcUrl: process.env.REACT_APP_PRATER_EXECUTION_API || "https://lodestar-goerlirpc.chainsafe.io",
+  },
+  [NetworkName.sepolia]: {
+    beaconApiUrl: process.env.REACT_APP_SEPOLIA_BEACON_API || "https://lodestar-sepolia.chainsafe.io",
+    elRpcUrl: process.env.REACT_APP_SEPOLIA_EXECUTION_API || "https://lodestar-sepoliarpc.chainsafe.io",
   },
   [NetworkName.custom]: {beaconApiUrl: "", elRpcUrl: ""},
 };
@@ -96,6 +102,10 @@ export const defaultNetworkTokens: Record<
   [NetworkName.goerli]: {
     full: getNetworkTokens(NetworkName.goerli),
     partial: getNetworkTokens(NetworkName.goerli, true),
+  },
+  [NetworkName.sepolia]: {
+    full: getNetworkTokens(NetworkName.sepolia),
+    partial: getNetworkTokens(NetworkName.sepolia, true),
   },
   [NetworkName.custom]: {
     full: getNetworkTokens(NetworkName.custom),

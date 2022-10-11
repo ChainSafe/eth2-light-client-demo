@@ -113,7 +113,8 @@ export function ProofReqResp({client, head}: {client: Lightclient; head: phase0.
 type TreeBackedState =
   | CompositeView<typeof ssz.phase0.BeaconState>
   | CompositeView<typeof ssz.altair.BeaconState>
-  | CompositeView<typeof ssz.bellatrix.BeaconState>;
+  | CompositeView<typeof ssz.bellatrix.BeaconState>
+  | CompositeView<typeof ssz.capella.BeaconState>;
 
 function renderState(paths: Path[], state: TreeBackedState): StateRender {
   if (!state) return [];

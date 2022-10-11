@@ -42,7 +42,8 @@ export default function App(): JSX.Element {
   const [reqStatusInit, setReqStatusInit] = useState<ReqStatus<Lightclient, string>>({});
   const [head, setHead] = useState<phase0.BeaconBlockHeader>();
   const [latestSyncedPeriod, setLatestSyncedPeriod] = useState<number>();
-  const [address, setAddress] = useState<string>("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
+  // Setting Avalanche Bridge as the default token address to showcase changing balances
+  const [address, setAddress] = useState<string>("0x8EB8a3b98659Cce290402893d0123abb75E3ab28");
   const [accountReqStatus, setAccountReqStatus] = useState<ReqStatus<ParsedAccount, string>>({});
   const [erc20Contracts, setErc20Contracts] = useState<Record<string, ERC20Contract>>(
     defaultNetworkTokens[networkDefault].full
@@ -52,6 +53,7 @@ export default function App(): JSX.Element {
   useEffect(() => {
     setBeaconApiUrl(defaultNetworkUrls[network].beaconApiUrl);
     setElRpcUrl(defaultNetworkUrls[network].elRpcUrl);
+    setErc20Contracts(defaultNetworkTokens[network].full);
   }, [network]);
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import {networkGenesis} from "@lodestar/light-client/networks";
+import {genesisData as networkGenesis} from "@lodestar/config/networks";
 import {networksChainConfig} from "@lodestar/config/networks";
 import {getClient} from "@lodestar/api";
 import {config as configDefault} from "@lodestar/config/default";
@@ -8,10 +8,9 @@ import {chainConfigFromJson} from "@lodestar/config";
 export enum NetworkName {
   mainnet = "mainnet",
   goerli = "goerli",
-  ropsten = "ropsten",
   custom = "custom",
 }
-export const networkDefault = NetworkName.goerli;
+export const networkDefault = NetworkName.mainnet;
 
 export type ERC20Contract = {
   contractAddress: string;
@@ -22,7 +21,6 @@ export async function getNetworkData(network: NetworkName, beaconApiUrl?: string
   switch (network) {
     case NetworkName.mainnet:
     case NetworkName.goerli:
-    case NetworkName.ropsten:
       return {
         genesisData: networkGenesis[network],
         chainConfig: networksChainConfig[network],
@@ -55,10 +53,6 @@ export const defaultNetworkUrls: Record<NetworkName, {beaconApiUrl: string; elRp
     beaconApiUrl: process.env.REACT_APP_PRATER_BEACON_API || "https://lodestar-goerli.chainsafe.io",
     elRpcUrl: process.env.REACT_APP_PRATER_EXECUTION_API || "https://lodestar-goerlirpc.chainsafe.io",
   },
-  [NetworkName.ropsten]: {
-    beaconApiUrl: process.env.REACT_APP_KILN_BEACON_API || "https://lodestar-ropsten.chainsafe.io",
-    elRpcUrl: process.env.REACT_APP_KILN_EXECUTION_API || "https://lodestar-ropstenrpc.chainsafe.io",
-  },
   [NetworkName.custom]: {beaconApiUrl: "", elRpcUrl: ""},
 };
 
@@ -71,7 +65,10 @@ export const DefaultTokensMeta: Record<
 > = {
   [DefaultTokens.DAI]: {
     balanceMappingIndex: 2,
-    addresses: {[NetworkName.goerli]: "0x7b4343e96fa21413a8e5A15D67b529D2B9495437"},
+    addresses: {
+      // DAI contract address on mainnet, for others user will be able to input
+      [NetworkName.mainnet]: "0x6b175474e89094c44da98b954eedeac495271d0f",
+    },
   },
 };
 
@@ -99,10 +96,6 @@ export const defaultNetworkTokens: Record<
   [NetworkName.goerli]: {
     full: getNetworkTokens(NetworkName.goerli),
     partial: getNetworkTokens(NetworkName.goerli, true),
-  },
-  [NetworkName.ropsten]: {
-    full: getNetworkTokens(NetworkName.ropsten),
-    partial: getNetworkTokens(NetworkName.ropsten, true),
   },
   [NetworkName.custom]: {
     full: getNetworkTokens(NetworkName.custom),

@@ -44,6 +44,7 @@ export function DisplayAccount({
       <DisplayBalance name={"Ether"} contractAddress={""} balance={account.balance} />
       {account.tokens.map((token) => (
         <DisplayBalance
+          key={token.name}
           {...token}
           removeToken={(tokenName) => {
             delete erc20Contracts[tokenName];
@@ -54,6 +55,14 @@ export function DisplayAccount({
       <NewContract erc20Contracts={erc20Contracts} setErc20Contracts={setErc20Contracts} network={network} />
     </>
   );
+}
+
+function truncateAmountWithCommas(amount: string): string {
+  const displayAmount = amount.match(/^-?\d+(?:\.\d{0,2})?/);
+  if (displayAmount !== null && displayAmount.length > 0) {
+    return displayAmount[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+  return "NA";
 }
 
 export function DisplayBalance({
@@ -79,7 +88,7 @@ export function DisplayBalance({
           {removeToken && "✖️"}
         </div>
         <div className="balance">
-          <input value={balance} disabled={true} />
+          <input value={truncateAmountWithCommas(balance)} disabled={true} />
         </div>
         <div className="name">
           <div>{name}</div>

@@ -19,7 +19,7 @@ jobs:
             uses: cloudflare/pages-action@1
             with:
               apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-              accountId: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+              accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
               projectName: light-client-demo
               directory: ./build
               gitHubToken: ${{ secrets.GITHUB_TOKEN }}

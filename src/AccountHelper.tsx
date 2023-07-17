@@ -16,7 +16,6 @@ export type NewContractForm = {
 export type ParsedAccount = {
   type: string;
   balance: string;
-  nonce: string;
   verified: boolean;
   tokens: {name: string; balance: string; contractAddress: string}[];
 };

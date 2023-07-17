@@ -18,41 +18,6 @@ export type ERC20Contract = {
   balanceMappingIndex: number;
 };
 
-export async function getNetworkData(network: NetworkName, beaconApiUrl?: string) {
-  switch (network) {
-    case NetworkName.mainnet:
-    case NetworkName.goerli:
-    case NetworkName.sepolia:
-      return {
-        genesisData: networkGenesis[network],
-        chainConfig: networksChainConfig[network],
-      };
-
-    default:
-      if (!beaconApiUrl) {
-        throw Error(`Unknown network: ${network}, requires beaconApiUrl to load config`);
-      }
-      const api = getClient({baseUrl: beaconApiUrl}, {config: configDefault});
-
-      const genesisRes = await api.beacon.getGenesis();
-      ApiError.assert(genesisRes);
-      const genesisData = genesisRes.response.data;
-
-      const configRes = await api.config.getSpec();
-      ApiError.assert(configRes);
-      const chainConfig = configRes.response.data;
-
-      const networkData = {
-        genesisData: {
-          genesisTime: Number(genesisData.genesisTime),
-          genesisValidatorsRoot: toHexString(genesisData.genesisValidatorsRoot),
-        },
-        chainConfig: chainConfigFromJson(chainConfig),
-      };
-      return networkData;
-  }
-}
-
 export const defaultNetworkUrls: Record<NetworkName, {beaconApiUrl: string; elRpcUrl: string}> = {
   [NetworkName.mainnet]: {
     beaconApiUrl: process.env.REACT_APP_MAINNET_BEACON_API || "https://lodestar-mainnet.chainsafe.io",

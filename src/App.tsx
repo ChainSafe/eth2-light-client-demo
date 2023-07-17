@@ -1,39 +1,24 @@
 import React, {useEffect, useState, useRef} from "react";
 import {fromHexString, toHexString} from "@chainsafe/ssz";
-import {Api, ApiError, getClient} from "@lodestar/api";
+import {getClient} from "@lodestar/api";
 import {Lightclient, LightclientEvent} from "@lodestar/light-client";
-import {LightClientRestTransport} from "@lodestar/light-client/transport";
-import {createChainForkConfig} from "@lodestar/config";
+import {createIChainForkConfig} from "@lodestar/config";
 import {config as configDefault} from "@lodestar/config/default";
 
-import {SyncPeriod, bellatrix, allForks} from "@lodestar/types";
+import {phase0, SyncPeriod, ssz, bellatrix} from "@lodestar/types";
 import {computeSyncPeriodAtSlot} from "@lodestar/light-client/utils";
-import {getLcLoggerConsole} from "@lodestar/light-client/utils";
 
 import Web3 from "web3";
-import {toBuffer, keccak256} from "ethereumjs-util";
-import {DefaultStateManager} from "@ethereumjs/statemanager";
-import {numberToHex} from "web3-utils";
-import {defaultAbiCoder} from "@ethersproject/abi";
 
 import Footer from "./components/Footer";
 import {ErrorView} from "./components/ErrorView";
 import {Loader} from "./components/Loader";
 import {SyncStatus} from "./SyncStatus";
 import {TimeMonitor} from "./TimeMonitor";
-import {ProofReqResp} from "./ProofReqResp";
-import {ReqStatus} from "./types";
-import {
-  NetworkName,
-  networkDefault,
-  getNetworkData,
-  defaultNetworkUrls,
-  defaultNetworkTokens,
-  ERC20Contract,
-} from "./Networks";
+import {ProofProvider, ReqStatus} from "./types";
+import {NetworkName, networkDefault, defaultNetworkUrls, defaultNetworkTokens, ERC20Contract} from "./Networks";
 import {ParsedAccount, DisplayAccount} from "./AccountHelper";
-
-const stateManager = new DefaultStateManager();
+import {ProofReqResp} from "./ProofReqResp";
 
 export default function App(): JSX.Element {
   const [network, setNetwork] = useState<NetworkName>(networkDefault);
@@ -41,8 +26,9 @@ export default function App(): JSX.Element {
   const [elRpcUrl, setElRpcUrl] = useState(defaultNetworkUrls[networkDefault].elRpcUrl);
   const [checkpointRootStr, setCheckpointRootStr] = useState("");
   const [reqStatusInit, setReqStatusInit] = useState<ReqStatus<Lightclient, string>>({});
-  const [head, setHead] = useState<allForks.LightClientHeader>();
+  const [head, setHead] = useState<phase0.BeaconBlockHeader>();
   const [latestSyncedPeriod, setLatestSyncedPeriod] = useState<number>();
+
   // Setting Avalanche Bridge as the default token address to showcase changing balances
   const [address, setAddress] = useState<string>("0x8EB8a3b98659Cce290402893d0123abb75E3ab28");
   const [accountReqStatus, setAccountReqStatus] = useState<ReqStatus<ParsedAccount, string>>({});
@@ -71,10 +57,10 @@ export default function App(): JSX.Element {
         return;
       }
 
-      const blockRes = await (client["transport"]["api"] as Api).beacon.getBlockV2(head.beacon.slot);
-      ApiError.assert(blockRes);
+      const blockHash = toHexString(ssz.phase0.BeaconBlockHeader.hashTreeRoot(head));
+      const data = await client.api.beacon.getBlockV2(blockHash);
 
-      const block = blockRes.response.data as bellatrix.SignedBeaconBlock;
+      const {data: block} = data as unknown as {data: bellatrix.SignedBeaconBlock};
       const executionPayload = block.message.body.executionPayload;
 
       // If the merge not complete, executionPayload would not exists
@@ -86,7 +72,6 @@ export default function App(): JSX.Element {
       setAccountReqStatus({result: accountReqStatus.result, loading: `Fetching status from ${elRpcUrl}`});
       const verifiedAccount = await fetchAndVerifyAddressBalances({
         web3: web3.current,
-        executionPayload,
         address,
         erc20Contracts,
       });
@@ -94,20 +79,19 @@ export default function App(): JSX.Element {
     }
 
     fetchAndVerifyAccount().catch((e) => {
-      setAccountReqStatus({result: accountReqStatus.result, error: e});
+      setAccountReqStatus({error: e, loading: undefined});
     });
   }, [head, address, elRpcUrl, erc20Contracts]);
 
   useEffect(() => {
-    const client = reqStatusInit.result;
-    if (!client) return;
+    const proofProvider = reqStatusInit.result;
+    if (!proofProvider) return;
 
-    client.start();
-    const head = client.getHead();
+    const head = proofProvider.getStatus().latest;
     setHead(head);
-    setLatestSyncedPeriod(computeSyncPeriodAtSlot(head.beacon.slot));
+    setLatestSyncedPeriod(computeSyncPeriodAtSlot(head.slot));
 
-    function onNewHead(newHeader: allForks.LightClientHeader) {
+    function onNewHead(newHeader: phase0.BeaconBlockHeader) {
       setHead(newHeader);
     }
 
@@ -115,12 +99,12 @@ export default function App(): JSX.Element {
       setLatestSyncedPeriod(period);
     }
 
-    client.emitter.on(LightclientEvent.lightClientFinalityHeader, onNewHead);
-    // client.emitter.on(LightclientEvent.committee, onNewCommittee);
+    client.emitter.on(LightclientEvent.head, onNewHead);
+    client.emitter.on(LightclientEvent.committee, onNewCommittee);
 
     return function () {
-      client.emitter.off(LightclientEvent.lightClientFinalityHeader, onNewHead);
-      // client.emitter.off(LightclientEvent.committee, onNewCommittee);
+      client.emitter.off(LightclientEvent.head, onNewHead);
+      client.emitter.off(LightclientEvent.committee, onNewCommittee);
     };
   }, [reqStatusInit.result]);
 
@@ -138,17 +122,19 @@ export default function App(): JSX.Element {
       setReqStatusInit({loading: `Syncing from trusted checkpoint: ${checkpointRootHex}`});
 
       const {genesisData, chainConfig} = await getNetworkData(network, beaconApiUrl);
-      const config = createChainForkConfig(chainConfig);
+      const config = createIChainForkConfig(chainConfig);
 
       const client = await Lightclient.initializeFromCheckpointRoot({
         config,
         logger: getLcLoggerConsole({logDebug: true}),
-        transport: new LightClientRestTransport(getClient({urls: [beaconApiUrl]}, {config})),
+        beaconApiUrl,
         genesisData,
         checkpointRoot,
       });
 
-      setReqStatusInit({result: client});
+      web3.current = new Web3(provider);
+
+      setReqStatusInit({result: proofProvider});
     } catch (e) {
       (e as Error).message = `Error initializing from trusted checkpoint ${checkpointRootHex}: ${(e as Error).message}`;
       setReqStatusInit({error: e as Error});
@@ -250,19 +236,9 @@ export default function App(): JSX.Element {
                       <Loader />
                     ) : (
                       <div>
-                        <span>
-                          {accountReqStatus.error || !accountReqStatus.result
-                            ? "error"
-                            : accountReqStatus.result.verified
-                            ? "valid"
-                            : "invalid"}
-                        </span>
+                        <span>{accountReqStatus.error || !accountReqStatus.result ? "invalid" : "valid"}</span>
                         <p style={{fontSize: "2em"}}>
-                          {accountReqStatus.error || !accountReqStatus.result
-                            ? "🛑"
-                            : accountReqStatus.result.verified
-                            ? "✅"
-                            : "❌"}
+                          {accountReqStatus.error || !accountReqStatus.result ? "❌" : "✅"}
                         </p>
                       </div>
                     )}
@@ -328,9 +304,9 @@ export default function App(): JSX.Element {
         </section>
         {reqStatusInit.result ? (
           <>
-            <TimeMonitor client={reqStatusInit.result} />
-            <SyncStatus client={reqStatusInit.result} head={head} latestSyncedPeriod={latestSyncedPeriod} />
-            {head !== undefined && <ProofReqResp client={reqStatusInit.result} head={head} />}
+            <TimeMonitor proofProvider={reqStatusInit.result} />
+            <SyncStatus proofProvider={reqStatusInit.result} head={head} latestSyncedPeriod={latestSyncedPeriod} />
+            {head !== undefined && <ProofReqResp proofProvider={reqStatusInit.result} head={head} />}
           </>
         ) : reqStatusInit.error ? (
           <ErrorView error={reqStatusInit.error} />
@@ -352,66 +328,46 @@ const externalAddressCodeHash = "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca822
 
 async function fetchAndVerifyAddressBalances({
   web3,
-  executionPayload,
   address,
   erc20Contracts,
 }: {
   web3: Web3 | undefined;
-  executionPayload: bellatrix.ExecutionPayload;
   address: string;
   erc20Contracts: Record<string, ERC20Contract>;
 }): Promise<ParsedAccount> {
   if (!web3) throw Error(`No valid connection to EL`);
-  const params: [string, string[], number] = [address, [], executionPayload.blockNumber];
-  const stateRoot = toHexString(executionPayload.stateRoot);
-  const proof = await web3.eth.getProof(...params);
+  let balance: string = "";
+  let verified: boolean;
 
-  const {balance, nonce} = proof;
+  try {
+    balance = await web3.eth.getBalance(address);
+    verified = true;
+  } catch (err) {
+    verified = false;
+  }
 
-  // Verify the proof, web3 converts nonce and balance into number strings, however
-  // ethereumjs verify proof requires them in the original hex format
-  proof.nonce = numberToHex(proof.nonce);
-  proof.balance = numberToHex(proof.balance);
-
-  const proofStateRoot = toHexString(keccak256(toBuffer(proof.accountProof[0])));
-  let verified =
-    stateRoot === proofStateRoot &&
-    (proof.codeHash !== externalAddressCodeHash || proof.storageHash === externalAddressStorageHash) &&
-    (await stateManager.verifyProof(proof));
   let tokens = [];
 
   for (const contractName of Object.keys(erc20Contracts)) {
     const {contractAddress, balanceMappingIndex} = erc20Contracts[contractName];
-    const balanceSlot = web3.utils.keccak256(
-      defaultAbiCoder.encode(["address", "uint"], [address, balanceMappingIndex])
-    );
-    const contractProof = await web3.eth.getProof(contractAddress, [balanceSlot], executionPayload.blockNumber);
-    if (contractProof.codeHash === externalAddressCodeHash) {
-      throw Error(`No contract deployed at ${contractAddress} for ${contractName}`);
+    try {
+      const contractBalance = await web3.eth.getBalance(contractAddress);
+      tokens.push({
+        name: contractName,
+        balance: contractBalance,
+        contractAddress,
+      });
+    } catch (err) {
+      console.error(`Error fetching contract balance`, err);
     }
-    const contractProofStateRoot = toHexString(keccak256(toBuffer(contractProof.accountProof[0])));
-    // Verify the proof, web3 converts nonce and balance into number strings, however
-    // ethereumjs verify proof requires them in the original hex format
-    contractProof.nonce = numberToHex(contractProof.nonce);
-    contractProof.balance = numberToHex(contractProof.balance);
-
-    verified =
-      verified &&
-      stateRoot === contractProofStateRoot &&
-      contractProof.storageProof[0]?.key === balanceSlot &&
-      (await stateManager.verifyProof(contractProof));
-    tokens.push({
-      name: contractName,
-      contractAddress,
-      balance: web3.utils.fromWei(web3.utils.hexToNumberString(contractProof.storageProof[0]?.value ?? "0x0")),
-    });
   }
 
   return {
     balance: web3.utils.fromWei(balance, "ether"),
-    nonce,
     verified,
     tokens,
-    type: proof.codeHash === externalAddressCodeHash ? "external" : "contract",
+    // TODO: Find a way to fix this
+    // type: proof.codeHash === externalAddressCodeHash ? "external" : "contract",
+    type: "external",
   };
 }

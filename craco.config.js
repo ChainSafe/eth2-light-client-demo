@@ -2,13 +2,11 @@ const webpack = require("webpack");
 
 module.exports = {
   babel: {
-    plugins: [
-      "@babel/plugin-proposal-nullish-coalescing-operator",
-      "@babel/plugin-proposal-optional-chaining",
-    ],
+    plugins: ["@babel/plugin-proposal-nullish-coalescing-operator", "@babel/plugin-proposal-optional-chaining"],
   },
   webpack: {
     configure: {
+      target: "web",
       module: {
         exprContextCritical: false, // turns off Critical dependency: the request of a dependency is an expression error
       },
@@ -17,7 +15,7 @@ module.exports = {
       },
       resolve: {
         fallback: {
-          '@chainsafe/blst': false, // @chainsafe/blst is a peer dependency which is not needed in a browser environment
+          "@chainsafe/blst": false, // @chainsafe/blst is a peer dependency which is not needed in a browser environment
           http: require.resolve("stream-http"),
           https: require.resolve("https-browserify"),
           crypto: false,
@@ -32,11 +30,12 @@ module.exports = {
     },
     plugins: [
       new webpack.DefinePlugin({
-        process: { argv: [] },
+        process: {argv: []},
       }),
       new webpack.ProvidePlugin({
         Buffer: ["buffer", "Buffer"],
       }),
+      new webpack.LoaderTargetPlugin('browser'),
     ],
   },
 };

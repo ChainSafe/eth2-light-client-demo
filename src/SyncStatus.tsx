@@ -1,24 +1,32 @@
-import React from "react";
-import {Lightclient} from "@lodestar/light-client";
+import React, {useEffect, useState} from "react";
 import {computeSyncPeriodAtSlot} from "@lodestar/light-client/utils";
 import {SyncPeriod, allForks} from "@lodestar/types";
 import {toHexString} from "@chainsafe/ssz";
+import {ProofProvider} from "./types";
 
 export function SyncStatus({
-  client,
+  proofProvider,
   latestSyncedPeriod,
   head,
 }: {
-  client: Lightclient;
+  proofProvider: ProofProvider;
   latestSyncedPeriod: SyncPeriod | undefined;
   head: allForks.LightClientHeader | undefined;
 }): JSX.Element {
+  const [stateRoot, setStateRoot] = useState<string>("");
+
+  useEffect(() => {
+    proofProvider.getExecutionPayload(head ?? proofProvider.getStatus().latest).then((header) => {
+      setStateRoot(toHexString(header.stateRoot));
+    });
+  });
+
   return (
     <section>
       <h2>Sync Status</h2>
       <div className="grid-2col-render">
         <div>Latest sync period: {latestSyncedPeriod ?? "-"}</div>
-        <div>Clock sync period: {computeSyncPeriodAtSlot(client.currentSlot)}</div>
+        <div>Clock sync period: {computeSyncPeriodAtSlot(proofProvider.getStatus().latest)}</div>
       </div>
 
       <h3>Latest Synced Snapshot Header</h3>

@@ -2,9 +2,9 @@ import React, {useEffect, useMemo, useState} from "react";
 import throttle from "lodash/throttle";
 import {Lightclient} from "@lodestar/light-client";
 import {TreeOffsetProof, computeDescriptor} from "@chainsafe/persistent-merkle-tree";
-import {ssz, allForks} from "@lodestar/types";
+import {phase0, ssz, allForks} from "@lodestar/types";
 import {CompositeType, toHexString, CompositeView, JsonPath} from "@chainsafe/ssz";
-import {ReqStatus} from "./types";
+import {ProofProvider, ReqStatus} from "./types";
 import {ErrorView} from "./components/ErrorView";
 import {ApiError, Api} from "@lodestar/api";
 

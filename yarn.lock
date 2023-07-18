@@ -1870,82 +1870,82 @@
   resolved "https://registry.yarnpkg.com/@leichtgewicht/ip-codec/-/ip-codec-2.0.4.tgz#b2ac626d6cb9c8718ab459166d4bb405b8ffa78b"
   integrity sha512-Hcv+nVC0kZnQ3tD9GVu5xSMR4VVYOteQIr/hwFPVEvPdlXqgGEuRjiheChHgdM+JyqdgNcmzZOX/tnl0JOiI7A==
 
-"@lodestar/api@^1.9.1":
-  version "1.9.1"
-  resolved "https://registry.yarnpkg.com/@lodestar/api/-/api-1.9.1.tgz#7838da534fef59cd223acb13949327ad9fcc6e5f"
-  integrity sha512-3PzciNoEqFRJ1vqVigEHI196QqllP2onIqmXmeAYdZo8UcXN7BhI9L8C0VVmaCz7v2567o6EZsL1dIRLXz6YqA==
+"@lodestar/api@^1.9.2":
+  version "1.9.2"
+  resolved "https://registry.yarnpkg.com/@lodestar/api/-/api-1.9.2.tgz#038d49492ceff2473259dd10631d8eed39bd1816"
+  integrity sha512-MLmmg21ZbJAfyY3RXgPDOs1/lNnG/m+oOkImBn4qQjYt2efIaVPo3v4b3/YRQroXldkO4OvjCJ1L+s5JphbH5A==
   dependencies:
     "@chainsafe/persistent-merkle-tree" "^0.5.0"
     "@chainsafe/ssz" "^0.10.2"
-    "@lodestar/config" "^1.9.1"
-    "@lodestar/params" "^1.9.1"
-    "@lodestar/types" "^1.9.1"
-    "@lodestar/utils" "^1.9.1"
+    "@lodestar/config" "^1.9.2"
+    "@lodestar/params" "^1.9.2"
+    "@lodestar/types" "^1.9.2"
+    "@lodestar/utils" "^1.9.2"
     cross-fetch "^3.1.4"
     eventsource "^2.0.2"
     qs "^6.11.1"
 
-"@lodestar/config@^1.9.1":
-  version "1.9.1"
-  resolved "https://registry.yarnpkg.com/@lodestar/config/-/config-1.9.1.tgz#c4d38f23cdfdbe6ca54398d083732ee43b98e629"
-  integrity sha512-iRJ6QNX2Vk6UitTRGNhdTgaAUO6mRqARrd122ePEf2htfGWfZj3Wq11H+//s36gdaBci/Li1YMQCJ50+BPLWIw==
+"@lodestar/config@^1.9.2":
+  version "1.9.2"
+  resolved "https://registry.yarnpkg.com/@lodestar/config/-/config-1.9.2.tgz#0dfeeb70265d495fd0bbe66153f7e164736fad47"
+  integrity sha512-zqRbeHMsHXlE94lPUNtJ8DfCfE2FC+3MifTjOykPVlh5QTFWq1OwlGOFwlL3YeGXiET+n0cYrzGgRKjg3Bsn1Q==
   dependencies:
     "@chainsafe/ssz" "^0.10.2"
-    "@lodestar/params" "^1.9.1"
-    "@lodestar/types" "^1.9.1"
+    "@lodestar/params" "^1.9.2"
+    "@lodestar/types" "^1.9.2"
 
-"@lodestar/light-client@^1.9.1":
-  version "1.9.1"
-  resolved "https://registry.yarnpkg.com/@lodestar/light-client/-/light-client-1.9.1.tgz#a20086d0de13f89c1a082ad19f22899dde06d87a"
-  integrity sha512-Xodn4Ux67BpvMGjXEY9Ohc6rTSXYagjunI3eibPQXI6FL3OmdntXiDyjZK3/6cXFcwoMxgpKxk9SwGyowNwo+A==
+"@lodestar/light-client@^1.9.2":
+  version "1.9.2"
+  resolved "https://registry.yarnpkg.com/@lodestar/light-client/-/light-client-1.9.2.tgz#77bb8a8b8d02b8feb90e604b202d2885218ede8f"
+  integrity sha512-3DJTwnwhQ7ZRtPxxmxCK7JHjo2G6UkoRCz4ckWxyl4rGTFn7nGO2b7RJWStCpdD1pgk8/DBs2puoq/WHLsinkg==
   dependencies:
     "@chainsafe/bls" "7.1.1"
     "@chainsafe/persistent-merkle-tree" "^0.5.0"
     "@chainsafe/ssz" "^0.10.2"
-    "@lodestar/api" "^1.9.1"
-    "@lodestar/config" "^1.9.1"
-    "@lodestar/params" "^1.9.1"
-    "@lodestar/state-transition" "^1.9.1"
-    "@lodestar/types" "^1.9.1"
-    "@lodestar/utils" "^1.9.1"
+    "@lodestar/api" "^1.9.2"
+    "@lodestar/config" "^1.9.2"
+    "@lodestar/params" "^1.9.2"
+    "@lodestar/state-transition" "^1.9.2"
+    "@lodestar/types" "^1.9.2"
+    "@lodestar/utils" "^1.9.2"
     cross-fetch "^3.1.4"
     mitt "^3.0.0"
     strict-event-emitter-types "^2.0.0"
 
-"@lodestar/params@^1.9.1":
-  version "1.9.1"
-  resolved "https://registry.yarnpkg.com/@lodestar/params/-/params-1.9.1.tgz#ae022837abcb535fe497a7fa4edf27f30ecae53e"
-  integrity sha512-O7PV8muPHmI/P53dwblYHXlqsz8+xssMvQwuBZQb7UulvdSjpmJZAQTr84Idjq3IGn3TzOX305WbnfTeTzsPvg==
+"@lodestar/params@^1.9.2":
+  version "1.9.2"
+  resolved "https://registry.yarnpkg.com/@lodestar/params/-/params-1.9.2.tgz#ab102c6d80bc94b8129e470e6f8d0d551329b803"
+  integrity sha512-Uj0OE4zYG4/DA7wd85aSN/F/DiyuwQxy9mA0yk/UmSaZO74moa+AxXeGMWbD4CB1t/7zbCxjczBxQ8PEEWL4Fw==
 
-"@lodestar/state-transition@^1.9.1":
-  version "1.9.1"
-  resolved "https://registry.yarnpkg.com/@lodestar/state-transition/-/state-transition-1.9.1.tgz#faf1ac3e9dc22847637c53abba0b00104875882f"
-  integrity sha512-Vtua8D3KPjwA4o/ZcB99WRly/fqKZcnS490Unx/jhpOIO4+p0eXuRGlYWyURqooWWAp7xhSrrSGuCwr37U3+5Q==
+"@lodestar/state-transition@^1.9.2":
+  version "1.9.2"
+  resolved "https://registry.yarnpkg.com/@lodestar/state-transition/-/state-transition-1.9.2.tgz#78dadd4758a284bcf7396159825d87bd91525c1b"
+  integrity sha512-95NMCHd8uvTRC+5HdaqPKid/M8Fkkuwh4AntFMjsgqyBEVPC/9VzgsEzZVuVVxE3whQ0IJiiT8BRQbPmvcUfUA==
   dependencies:
     "@chainsafe/as-sha256" "^0.3.1"
     "@chainsafe/bls" "7.1.1"
     "@chainsafe/persistent-merkle-tree" "^0.5.0"
     "@chainsafe/persistent-ts" "^0.19.1"
     "@chainsafe/ssz" "^0.10.2"
-    "@lodestar/config" "^1.9.1"
-    "@lodestar/params" "^1.9.1"
-    "@lodestar/types" "^1.9.1"
-    "@lodestar/utils" "^1.9.1"
+    "@lodestar/config" "^1.9.2"
+    "@lodestar/params" "^1.9.2"
+    "@lodestar/types" "^1.9.2"
+    "@lodestar/utils" "^1.9.2"
     bigint-buffer "^1.1.5"
     buffer-xor "^2.0.2"
 
-"@lodestar/types@^1.9.1":
-  version "1.9.1"
-  resolved "https://registry.yarnpkg.com/@lodestar/types/-/types-1.9.1.tgz#af4a14ab30bf1f0c87c2807913f42119d2394567"
-  integrity sha512-dLb0CwX395v9Vn1VvZvPT5cie0roe5Wfe7xrMCRCqRyvcJuPHYLVVQiCbYAsRLamOQaailF8FjZqv3M2BmEyLA==
+"@lodestar/types@^1.9.2":
+  version "1.9.2"
+  resolved "https://registry.yarnpkg.com/@lodestar/types/-/types-1.9.2.tgz#0c119566b7c2f6cbc1870a6141a0d7a739f27d96"
+  integrity sha512-a9pAURm3qXyqJA5y1Pzu8QGtukgq4Gni3zRd+KqTzNQgigtoZv5GZ2Pjfs2aJvXqhjpUTjc2bb/7VGSYycZe4w==
   dependencies:
     "@chainsafe/ssz" "^0.10.2"
-    "@lodestar/params" "^1.9.1"
+    "@lodestar/params" "^1.9.2"
 
-"@lodestar/utils@^1.9.1":
-  version "1.9.1"
-  resolved "https://registry.yarnpkg.com/@lodestar/utils/-/utils-1.9.1.tgz#ed93a0dc37ee9cf5ac72af2c080cf4f223b3fbd1"
-  integrity sha512-Na7lNG838EHxkidXAubsoV08QvDG76V2iuLN229j+6ERPHlItNdIzxH6m98OCtlpKdg5isCIS7eZANL1m7ecoA==
+"@lodestar/utils@^1.9.2":
+  version "1.9.2"
+  resolved "https://registry.yarnpkg.com/@lodestar/utils/-/utils-1.9.2.tgz#3a07f44f16983940b26f3f1d0ba7ef70e701a4cc"
+  integrity sha512-W/Eo4rIfaFBIFsJgEghDIWYdilvfwq1jNl049jd4f8O4R9fnxI1Tx9eDO19UefVmsb9DK1q9B7gG/FlgUhZJLQ==
   dependencies:
     "@chainsafe/as-sha256" "^0.3.1"
     any-signal "3.0.1"

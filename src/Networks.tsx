@@ -1,6 +1,6 @@
 import {genesisData as networkGenesis} from "@lodestar/config/networks";
 import {networksChainConfig} from "@lodestar/config/networks";
-import {getClient} from "@lodestar/api";
+import {ApiError, getClient} from "@lodestar/api";
 import {config as configDefault} from "@lodestar/config/default";
 import {toHexString} from "@chainsafe/ssz";
 import {chainConfigFromJson} from "@lodestar/config";
@@ -33,8 +33,15 @@ export async function getNetworkData(network: NetworkName, beaconApiUrl?: string
         throw Error(`Unknown network: ${network}, requires beaconApiUrl to load config`);
       }
       const api = getClient({baseUrl: beaconApiUrl}, {config: configDefault});
-      const {data: genesisData} = await api.beacon.getGenesis();
-      const {data: chainConfig} = await api.config.getSpec();
+
+      const genesisRes = await api.beacon.getGenesis();
+      ApiError.assert(genesisRes);
+      const genesisData = genesisRes.response.data;
+
+      const configRes = await api.config.getSpec();
+      ApiError.assert(configRes);
+      const chainConfig = configRes.response.data;
+
       const networkData = {
         genesisData: {
           genesisTime: Number(genesisData.genesisTime),

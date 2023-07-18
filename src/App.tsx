@@ -1,11 +1,12 @@
 import React, {useEffect, useState, useRef} from "react";
 import {fromHexString, toHexString} from "@chainsafe/ssz";
-import {getClient} from "@lodestar/api";
+import {Api, ApiError, getClient} from "@lodestar/api";
 import {Lightclient, LightclientEvent} from "@lodestar/light-client";
-import {createIChainForkConfig} from "@lodestar/config";
+import {LightClientRestTransport} from "@lodestar/light-client/transport";
+import {createChainForkConfig} from "@lodestar/config";
 import {config as configDefault} from "@lodestar/config/default";
 
-import {phase0, SyncPeriod, ssz, bellatrix} from "@lodestar/types";
+import {SyncPeriod, bellatrix, allForks} from "@lodestar/types";
 import {computeSyncPeriodAtSlot} from "@lodestar/light-client/utils";
 import {getLcLoggerConsole} from "@lodestar/light-client/utils";
 
@@ -40,7 +41,7 @@ export default function App(): JSX.Element {
   const [elRpcUrl, setElRpcUrl] = useState(defaultNetworkUrls[networkDefault].elRpcUrl);
   const [checkpointRootStr, setCheckpointRootStr] = useState("");
   const [reqStatusInit, setReqStatusInit] = useState<ReqStatus<Lightclient, string>>({});
-  const [head, setHead] = useState<phase0.BeaconBlockHeader>();
+  const [head, setHead] = useState<allForks.LightClientHeader>();
   const [latestSyncedPeriod, setLatestSyncedPeriod] = useState<number>();
   // Setting Avalanche Bridge as the default token address to showcase changing balances
   const [address, setAddress] = useState<string>("0x8EB8a3b98659Cce290402893d0123abb75E3ab28");
@@ -70,10 +71,10 @@ export default function App(): JSX.Element {
         return;
       }
 
-      const blockHash = toHexString(ssz.phase0.BeaconBlockHeader.hashTreeRoot(head));
-      const data = await client.api.beacon.getBlockV2(blockHash);
+      const blockRes = await (client["transport"]["api"] as Api).beacon.getBlockV2(head.beacon.slot);
+      ApiError.assert(blockRes);
 
-      const {data: block} = data as unknown as {data: bellatrix.SignedBeaconBlock};
+      const block = blockRes.response.data as bellatrix.SignedBeaconBlock;
       const executionPayload = block.message.body.executionPayload;
 
       // If the merge not complete, executionPayload would not exists
@@ -104,9 +105,9 @@ export default function App(): JSX.Element {
     client.start();
     const head = client.getHead();
     setHead(head);
-    setLatestSyncedPeriod(computeSyncPeriodAtSlot(head.slot));
+    setLatestSyncedPeriod(computeSyncPeriodAtSlot(head.beacon.slot));
 
-    function onNewHead(newHeader: phase0.BeaconBlockHeader) {
+    function onNewHead(newHeader: allForks.LightClientHeader) {
       setHead(newHeader);
     }
 
@@ -114,12 +115,12 @@ export default function App(): JSX.Element {
       setLatestSyncedPeriod(period);
     }
 
-    client.emitter.on(LightclientEvent.head, onNewHead);
-    client.emitter.on(LightclientEvent.committee, onNewCommittee);
+    client.emitter.on(LightclientEvent.lightClientFinalityHeader, onNewHead);
+    // client.emitter.on(LightclientEvent.committee, onNewCommittee);
 
     return function () {
-      client.emitter.off(LightclientEvent.head, onNewHead);
-      client.emitter.off(LightclientEvent.committee, onNewCommittee);
+      client.emitter.off(LightclientEvent.lightClientFinalityHeader, onNewHead);
+      // client.emitter.off(LightclientEvent.committee, onNewCommittee);
     };
   }, [reqStatusInit.result]);
 
@@ -137,12 +138,12 @@ export default function App(): JSX.Element {
       setReqStatusInit({loading: `Syncing from trusted checkpoint: ${checkpointRootHex}`});
 
       const {genesisData, chainConfig} = await getNetworkData(network, beaconApiUrl);
-      const config = createIChainForkConfig(chainConfig);
+      const config = createChainForkConfig(chainConfig);
 
       const client = await Lightclient.initializeFromCheckpointRoot({
         config,
         logger: getLcLoggerConsole({logDebug: true}),
-        beaconApiUrl,
+        transport: new LightClientRestTransport(getClient({urls: [beaconApiUrl]}, {config})),
         genesisData,
         checkpointRoot,
       });
@@ -162,7 +163,8 @@ export default function App(): JSX.Element {
 
       const client = getClient({baseUrl: beaconApiUrl}, {config: configDefault});
       const res = await client.beacon.getStateFinalityCheckpoints("head");
-      const finalizedCheckpoint = res.data.finalized;
+      ApiError.assert(res);
+      const finalizedCheckpoint = res.response.data.finalized;
       setCheckpointRootStr(toHexString(finalizedCheckpoint.root));
 
       // Hasn't load clint, just disable loader

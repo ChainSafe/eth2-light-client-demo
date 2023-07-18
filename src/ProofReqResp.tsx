@@ -1,11 +1,12 @@
 import React, {useEffect, useMemo, useState} from "react";
 import throttle from "lodash/throttle";
 import {Lightclient} from "@lodestar/light-client";
-import {TreeOffsetProof} from "@chainsafe/persistent-merkle-tree";
-import {phase0, ssz} from "@lodestar/types";
-import {CompositeType, toHexString, CompositeView} from "@chainsafe/ssz";
+import {TreeOffsetProof, computeDescriptor} from "@chainsafe/persistent-merkle-tree";
+import {ssz, allForks} from "@lodestar/types";
+import {CompositeType, toHexString, CompositeView, JsonPath} from "@chainsafe/ssz";
 import {ReqStatus} from "./types";
 import {ErrorView} from "./components/ErrorView";
+import {ApiError, Api} from "@lodestar/api";
 
 const SLOT_DIFF_TO_FETCH = 96;
 
@@ -17,7 +18,24 @@ const initialPathStr = `[
 type Path = (string | number)[];
 type StateRender = {key: string; value: string}[];
 
-export function ProofReqResp({client, head}: {client: Lightclient; head: phase0.BeaconBlockHeader}): JSX.Element {
+async function getHeadStateProof(
+  lightclient: Lightclient,
+  api: Api,
+  paths: JsonPath[]
+): Promise<{proof: TreeOffsetProof; header: allForks.LightClientHeader}> {
+  const header = lightclient.getHead();
+  const stateId = toHexString(header.beacon.stateRoot);
+  const gindices = paths.map((path) => ssz.bellatrix.BeaconState.getPathInfo(path).gindex);
+  const descriptor = computeDescriptor(gindices);
+  const res = await api.proof.getStateProof(stateId, descriptor);
+  ApiError.assert(res);
+  return {
+    proof: res.response.data as TreeOffsetProof,
+    header,
+  };
+}
+
+export function ProofReqResp({client, head}: {client: Lightclient; head: allForks.LightClientHeader}): JSX.Element {
   const [showProof, setShowProof] = useState(false);
   const [reqStatusProof, setReqStatusProof] = useState<ReqStatus<{proof: TreeOffsetProof; stateStr: StateRender}>>({});
   const [pathsStr, setPaths] = useState(initialPathStr);
@@ -28,11 +46,13 @@ export function ProofReqResp({client, head}: {client: Lightclient; head: phase0.
         try {
           setReqStatusProof({loading: true});
           const pathsQueried = JSON.parse(pathsStr);
-          const {proof, header} = await client.getHeadStateProof(pathsQueried);
+          const {proof, header} = await getHeadStateProof(client, client["transport"]["api"], pathsQueried);
           if (proof.leaves.length <= 0) {
             throw Error("Empty proof");
           }
-          const state = client.config.getForkTypes(header.slot).BeaconState.createFromProof(proof);
+          const state: TreeBackedState = client.config
+            .getForkTypes(header.beacon.slot)
+            .BeaconState.createFromProof(proof) as unknown as TreeBackedState;
           const stateStr = state ? renderState(pathsQueried, state) : [];
           setReqStatusProof({result: {proof, stateStr}});
         } catch (e) {
@@ -43,10 +63,10 @@ export function ProofReqResp({client, head}: {client: Lightclient; head: phase0.
   );
 
   useEffect(() => {
-    if (client.currentSlot - head.slot < SLOT_DIFF_TO_FETCH) {
-      fetchProofThrottled(head.stateRoot as Uint8Array, pathsStr);
+    if (client.currentSlot - head.beacon.slot < SLOT_DIFF_TO_FETCH) {
+      fetchProofThrottled(head.beacon.stateRoot as Uint8Array, pathsStr);
     }
-  }, [fetchProofThrottled, pathsStr, client, head.stateRoot, head.slot]);
+  }, [fetchProofThrottled, pathsStr, client, head.beacon.stateRoot, head.beacon.slot]);
 
   return (
     <section>
@@ -100,9 +120,9 @@ export function ProofReqResp({client, head}: {client: Lightclient; head: phase0.
           <p>Fetching proof...</p>
         ) : null}
 
-        {client.currentSlot - head.slot >= SLOT_DIFF_TO_FETCH && (
+        {client.currentSlot - head.beacon.slot >= SLOT_DIFF_TO_FETCH && (
           <div className="alert-warning">
-            Head is {client.currentSlot - head.slot} slots behind the clock. Head state may not be available
+            Head is {client.currentSlot - head.beacon.slot} slots behind the clock. Head state may not be available
           </div>
         )}
       </div>

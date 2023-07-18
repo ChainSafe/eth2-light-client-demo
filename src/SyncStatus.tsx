@@ -1,7 +1,7 @@
 import React from "react";
 import {Lightclient} from "@lodestar/light-client";
 import {computeSyncPeriodAtSlot} from "@lodestar/light-client/utils";
-import {phase0, SyncPeriod} from "@lodestar/types";
+import {SyncPeriod, allForks} from "@lodestar/types";
 import {toHexString} from "@chainsafe/ssz";
 
 export function SyncStatus({
@@ -11,7 +11,7 @@ export function SyncStatus({
 }: {
   client: Lightclient;
   latestSyncedPeriod: SyncPeriod | undefined;
-  head: phase0.BeaconBlockHeader | undefined;
+  head: allForks.LightClientHeader | undefined;
 }): JSX.Element {
   return (
     <section>
@@ -26,9 +26,9 @@ export function SyncStatus({
         {head ? (
           <>
             <span>slot</span>
-            <span>{head.slot}</span>
+            <span>{head.beacon.slot}</span>
             <span>stateRoot</span>
-            <span>{toHexString(head.stateRoot)}</span>
+            <span>{toHexString(head.beacon.stateRoot)}</span>
           </>
         ) : (
           <span>no header</span>

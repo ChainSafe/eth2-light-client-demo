@@ -6,7 +6,7 @@ module.exports = {
   },
   webpack: {
     configure: {
-      target: "web",
+      target: ["web"],
       module: {
         exprContextCritical: false, // turns off Critical dependency: the request of a dependency is an expression error
       },
@@ -25,7 +25,7 @@ module.exports = {
           path: false,
           zlib: false,
           fs: false
-        },
+        }
       },
     },
     plugins: [
@@ -35,7 +35,7 @@ module.exports = {
       new webpack.ProvidePlugin({
         Buffer: ["buffer", "Buffer"],
       }),
-      new webpack.LoaderTargetPlugin('browser'),
+      new webpack.LoaderTargetPlugin('web'),
     ],
   },
 };

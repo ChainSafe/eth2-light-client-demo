@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import {computeSyncPeriodAtSlot} from "@lodestar/light-client/utils";
 import {SyncPeriod, allForks} from "@lodestar/types";
 import {toHexString} from "@chainsafe/ssz";
-import {ProofProvider} from "./types";
+import {ProofProvider} from "../types";
 
 export function SyncStatus({
   proofProvider,
@@ -16,9 +16,12 @@ export function SyncStatus({
   const [stateRoot, setStateRoot] = useState<string>("");
 
   useEffect(() => {
-    proofProvider.getExecutionPayload(head ?? proofProvider.getStatus().latest).then((header) => {
-      setStateRoot(toHexString(header.stateRoot));
-    });
+    proofProvider
+      .waitToBeReady()
+      .then(() => proofProvider.getExecutionPayload(head?.beacon.slot ?? "latest"))
+      .then((header) => {
+        setStateRoot(toHexString(header.stateRoot));
+      });
   });
 
   return (
@@ -36,7 +39,7 @@ export function SyncStatus({
             <span>slot</span>
             <span>{head.beacon.slot}</span>
             <span>stateRoot</span>
-            <span>{toHexString(head.beacon.stateRoot)}</span>
+            <span>{stateRoot}</span>
           </>
         ) : (
           <span>no header</span>

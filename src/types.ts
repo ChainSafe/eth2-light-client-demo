@@ -5,4 +5,7 @@ export interface ReqStatus<T = true, P = boolean> {
   error?: Error;
   result?: T;
 }
+
+export type ReqHandler<T> = (res: ReqStatus<T>) => void;
+
 export type ProofProvider = ReturnType<typeof createVerifiedExecutionProvider>["proofProvider"];

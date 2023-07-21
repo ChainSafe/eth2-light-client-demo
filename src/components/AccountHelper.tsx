@@ -1,6 +1,6 @@
-import React, {useEffect, useMemo, useState} from "react";
-import {ErrorView} from "./components/ErrorView";
-import {ERC20Contract, NetworkName, defaultNetworkTokens} from "./Networks";
+import React, {useState} from "react";
+import {ErrorView} from "./ErrorView";
+import {ERC20Contract, NetworkName, defaultNetworkTokens} from "../utils/networks";
 
 enum FormAction {
   Form = "form",
@@ -17,7 +17,7 @@ export type ParsedAccount = {
   type: string;
   balance: string;
   verified: boolean;
-  tokens: {name: string; balance: string; contractAddress: string}[];
+  tokens: {name: string; balance: string; contractAddress: string; verified: boolean}[];
 };
 
 function defaultNewContract(): NewContractForm {

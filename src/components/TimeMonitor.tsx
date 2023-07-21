@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from "react";
 import {EPOCHS_PER_SYNC_COMMITTEE_PERIOD, SLOTS_PER_EPOCH} from "@lodestar/params";
-import {ProofProvider} from "./types";
+import {ProofProvider} from "../types";
 
 export function TimeMonitor({proofProvider}: {proofProvider: ProofProvider}): JSX.Element {
   const [, setCounter] = useState<number>();

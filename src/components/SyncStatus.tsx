@@ -1,30 +1,29 @@
-import React, {useEffect, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 import {computeSyncPeriodAtSlot} from "@lodestar/light-client/utils";
 import {SyncPeriod, allForks} from "@lodestar/types";
 import {toHexString} from "@chainsafe/ssz";
-import {ProofProvider} from "../types";
+import {ProofProviderContext} from "../contexts/ProofProviderContext";
 
 export function SyncStatus({
-  proofProvider,
   latestSyncedPeriod,
   head,
 }: {
-  proofProvider: ProofProvider;
   latestSyncedPeriod: SyncPeriod | undefined;
   head: allForks.LightClientHeader | undefined;
 }): JSX.Element {
+  const {proofProvider} = useContext(ProofProviderContext);
   const [stateRoot, setStateRoot] = useState<string>("");
 
   useEffect(() => {
     proofProvider
-      .waitToBeReady()
-      .then(() => proofProvider.getExecutionPayload(head?.beacon.slot ?? "latest"))
+      ?.waitToBeReady()
+      .then(() => proofProvider?.getExecutionPayload(head?.beacon.slot ?? "latest"))
       .then((header) => {
         setStateRoot(toHexString(header.stateRoot));
       });
   });
 
-  return (
+  return proofProvider ? (
     <section>
       <h2>Sync Status</h2>
       <div className="grid-2col-render">
@@ -46,5 +45,7 @@ export function SyncStatus({
         )}
       </div>
     </section>
+  ) : (
+    <></>
   );
 }

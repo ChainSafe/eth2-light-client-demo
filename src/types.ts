@@ -1,4 +1,6 @@
 import {createVerifiedExecutionProvider} from "@lodestar/prover";
+import Web3 from "web3";
+import {Api} from "@lodestar/api";
 
 export interface ReqStatus<T = true, P = boolean> {
   loading?: P;

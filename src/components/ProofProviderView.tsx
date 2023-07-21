@@ -1,16 +1,13 @@
-import React, {FunctionComponent, useEffect, useState} from "react";
-import {TimeMonitor} from "./TimeMonitor";
-import {SyncStatus} from "./SyncStatus";
-import {ProofProvider, ReqStatus} from "../types";
-import {ErrorView} from "./ErrorView";
-import {Loader} from "./Loader";
-import {allForks} from "@lodestar/types";
 import {LightclientEvent} from "@lodestar/light-client";
 import {computeSyncPeriodAtSlot} from "@lodestar/light-client/utils";
+import {allForks} from "@lodestar/types";
+import {FunctionComponent, useContext, useEffect, useState} from "react";
+import {ProofProviderContext} from "../contexts/ProofProviderContext";
+import {SyncStatus} from "./SyncStatus";
+import {TimeMonitor} from "./TimeMonitor";
 
-export const ProofProviderView: FunctionComponent<{proofProviderReq: ReqStatus<ProofProvider, string>}> = ({
-  proofProviderReq,
-}) => {
+export const ProofProviderView: FunctionComponent = () => {
+  const {isProofProviderReady, proofProvider} = useContext(ProofProviderContext);
   const [head, setHead] = useState<allForks.LightClientHeader>();
   const [latestSyncedPeriod, setLatestSyncedPeriod] = useState<number>();
 
@@ -20,39 +17,27 @@ export const ProofProviderView: FunctionComponent<{proofProviderReq: ReqStatus<P
     }
 
     async function process() {
-      if (!proofProviderReq.result) return;
-      if (!proofProviderReq.result.lightClient) return;
+      if (!isProofProviderReady || !proofProvider || !proofProvider.lightClient) return;
 
-      await proofProviderReq.result.waitToBeReady();
-
-      const head = proofProviderReq.result.lightClient.getHead();
+      const head = proofProvider.lightClient.getHead();
       setHead(head);
       setLatestSyncedPeriod(computeSyncPeriodAtSlot(head?.beacon.slot));
-      proofProviderReq.result.lightClient.emitter.on(LightclientEvent.lightClientFinalityHeader, onNewHead);
+      proofProvider.lightClient.emitter.on(LightclientEvent.lightClientFinalityHeader, onNewHead);
     }
 
     process().catch(console.error);
 
     return function () {
-      proofProviderReq.result?.lightClient?.emitter.off(LightclientEvent.lightClientFinalityHeader, onNewHead);
+      proofProvider?.lightClient?.emitter.off(LightclientEvent.lightClientFinalityHeader, onNewHead);
     };
-  }, [proofProviderReq.result]);
+  }, [isProofProviderReady]);
+
+  if (!proofProvider || !isProofProviderReady) return <></>;
 
   return (
     <>
-      {proofProviderReq.result ? (
-        <>
-          <TimeMonitor proofProvider={proofProviderReq.result} />
-          <SyncStatus proofProvider={proofProviderReq.result} head={head} latestSyncedPeriod={latestSyncedPeriod} />
-        </>
-      ) : proofProviderReq.error ? (
-        <ErrorView error={proofProviderReq.error} />
-      ) : proofProviderReq.loading ? (
-        <>
-          <Loader></Loader>
-          <p>Initializing proof provider - {proofProviderReq.loading}</p>
-        </>
-      ) : null}
+      <TimeMonitor />
+      <SyncStatus head={head} latestSyncedPeriod={latestSyncedPeriod} />
     </>
   );
 };

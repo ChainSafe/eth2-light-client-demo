@@ -1,23 +1,31 @@
-import React, {FunctionComponent, useState} from "react";
+import {ApiError} from "@lodestar/api";
 import {toHexString} from "@lodestar/utils";
-import {Api, ApiError} from "@lodestar/api";
-import {ReqHandler} from "../types";
+import {FunctionComponent, useContext, useState} from "react";
+import {ApiContext} from "../contexts/ApiContext";
+import {ConfigurationContext} from "../contexts/ConfigurationContext";
+import {UiContext} from "../contexts/UiContext";
 
-export const TrustedCheckpoint: FunctionComponent<{api: Api; reqHandler: ReqHandler<string>}> = ({api, reqHandler}) => {
+export const TrustedCheckpoint: FunctionComponent = () => {
+  const {setProgress, unsetProgress, setError} = useContext(UiContext);
+  const {setTrustedCheckpoint, trustedCheckpoint} = useContext(ConfigurationContext);
+  const {api} = useContext(ApiContext);
+
   const [checkpointRootStr, setCheckpointRootStr] = useState("");
 
   async function fillCheckpointFromNode() {
     try {
-      reqHandler({loading: true, result: "Fetching checkpoint from trusted node"});
+      if (!api) return;
+
+      setProgress("Fetching checkpoint from trusted node");
       const res = await api.beacon.getStateFinalityCheckpoints("head");
       ApiError.assert(res);
 
       const finalizedCheckpoint = toHexString(res.response.data.finalized.root);
-      setCheckpointRootStr(finalizedCheckpoint);
-      reqHandler({result: finalizedCheckpoint});
+      setTrustedCheckpoint(finalizedCheckpoint);
+      unsetProgress();
     } catch (e) {
       (e as Error).message = `Error initializing from trusted node: ${(e as Error).message}`;
-      reqHandler({error: e as Error});
+      setError(e as Error);
       // eslint-disable-next-line no-console
       console.error(e);
     }
@@ -25,7 +33,6 @@ export const TrustedCheckpoint: FunctionComponent<{api: Api; reqHandler: ReqHand
 
   function onChangeCheckpointRoot(val: string) {
     setCheckpointRootStr(val);
-    reqHandler({result: val});
   }
 
   return (
@@ -38,7 +45,7 @@ export const TrustedCheckpoint: FunctionComponent<{api: Api; reqHandler: ReqHand
           </span>
         </p>
         <input
-          value={checkpointRootStr}
+          value={trustedCheckpoint}
           onChange={(e) => onChangeCheckpointRoot(e.target.value)}
           placeholder="0xaabb..."
         />

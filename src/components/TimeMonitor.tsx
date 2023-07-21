@@ -1,8 +1,12 @@
-import React, {useState, useEffect} from "react";
+import React, {useState, useEffect, useContext} from "react";
 import {EPOCHS_PER_SYNC_COMMITTEE_PERIOD, SLOTS_PER_EPOCH} from "@lodestar/params";
-import {ProofProvider} from "../types";
+import {ProofProviderContext} from "../contexts/ProofProviderContext";
 
-export function TimeMonitor({proofProvider}: {proofProvider: ProofProvider}): JSX.Element {
+export function TimeMonitor(): JSX.Element {
+  const {proofProvider} = useContext(ProofProviderContext);
+
+  if (!proofProvider) return <></>;
+
   const [, setCounter] = useState<number>();
   useEffect(() => {
     const interval = setInterval(() => {

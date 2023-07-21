@@ -1,19 +1,22 @@
-import React, {FunctionComponent, useEffect, useState} from "react";
-import {ProofProvider, ReqStatus} from "../types";
-import {DisplayAccount, ParsedAccount} from "./AccountHelper";
-import {ERC20Contract, NetworkName} from "../utils/networks";
-import {Loader} from "./Loader";
-import {ErrorView} from "./ErrorView";
+import {FunctionComponent, useContext, useEffect, useState} from "react";
 import Web3 from "web3";
+import {ConfigurationContext} from "../contexts/ConfigurationContext";
+import {ProofProviderContext} from "../contexts/ProofProviderContext";
+import {ReqStatus} from "../types";
 import {erc20Abi} from "../utils/abi";
+import {ERC20Contract} from "../utils/networks";
+import {DisplayAccount, ParsedAccount} from "./AccountHelper";
+import {ErrorView} from "./ErrorView";
+import {Loader} from "./Loader";
+import {Web3Context} from "../contexts/Web3Context";
 
 export const AccountVerification: FunctionComponent<{
-  network: NetworkName;
-  proofProvider: ProofProvider;
-  web3: Web3;
   setErc20Contracts: (erc20Contracts: Record<string, ERC20Contract>) => void;
   erc20Contracts: Record<string, ERC20Contract>;
-}> = ({network, web3, erc20Contracts, setErc20Contracts}) => {
+}> = ({erc20Contracts, setErc20Contracts}) => {
+  const {network} = useContext(ConfigurationContext);
+  const {web3} = useContext(Web3Context);
+  const {isProofProviderReady} = useContext(ProofProviderContext);
   // Setting Avalanche Bridge as the default token address to showcase changing balances
   const [address, setAddress] = useState<string>("0x8EB8a3b98659Cce290402893d0123abb75E3ab28");
   const [accountStatus, setAccountStatus] = useState<ReqStatus<ParsedAccount, string>>({});
@@ -26,7 +29,9 @@ export const AccountVerification: FunctionComponent<{
       .catch((e) => {
         setAccountStatus({error: e, loading: undefined});
       });
-  }, []);
+  }, [isProofProviderReady]);
+
+  if (!isProofProviderReady) return <></>;
 
   return (
     <div>

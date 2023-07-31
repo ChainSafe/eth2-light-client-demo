@@ -1,5 +1,5 @@
 import {createContext} from "react";
-import {NetworkName} from "../utils/networks";
+import {NetworkName} from "../types";
 
 export const ConfigurationContext = createContext<{
   trustedCheckpoint: string;

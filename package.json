@@ -23,7 +23,7 @@
     "@lodestar/config": "^1.9.1",
     "@lodestar/light-client": "^1.9.1",
     "@lodestar/params": "^1.9.1",
-    "@lodestar/prover": "^1.9.1",
+    "@lodestar/prover": "next",
     "@lodestar/types": "^1.9.1",
     "@lodestar/utils": "^1.9.1",
     "@testing-library/jest-dom": "^5.11.4",
@@ -78,6 +78,17 @@
     "webpack-cli": "^5.1.4"
   },
   "overrides": {
-    "webpack": "^5.88.1"
+    "webpack": "^5.88.1",
+    "@lodestar/prover@next" : {
+      "@lodestar/api": {
+        "cross-fetch": "3.1.5"
+      },
+      "@lodestar/light-client": {
+        "cross-fetch": "3.1.5"
+      }
+    }
+  },
+  "resolutions": {
+    "@lodestar/prover/**/cross-fetch": "3.1.5"
   }
 }

@@ -3,19 +3,9 @@ import {ChainConfig, chainConfigFromJson} from "@lodestar/config";
 import {networksChainConfig} from "@lodestar/config/networks";
 
 import {getApiClient} from "./api";
+import {ERC20Contract, NetworkName} from "../types";
 
-export enum NetworkName {
-  mainnet = "mainnet",
-  goerli = "goerli",
-  sepolia = "sepolia",
-  custom = "custom",
-}
 export const networkDefault = NetworkName.mainnet;
-
-export type ERC20Contract = {
-  contractAddress: string;
-  balanceMappingIndex: number;
-};
 
 export const defaultNetworkUrls: Record<NetworkName, {beaconApiUrl: string; elRpcUrl: string}> = {
   [NetworkName.mainnet]: {

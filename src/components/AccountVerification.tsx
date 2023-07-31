@@ -2,13 +2,12 @@ import {FunctionComponent, useContext, useEffect, useState} from "react";
 import Web3 from "web3";
 import {ConfigurationContext} from "../contexts/ConfigurationContext";
 import {ProofProviderContext} from "../contexts/ProofProviderContext";
-import {ReqStatus} from "../types";
+import {ERC20Contract, ParsedAccount, ReqStatus} from "../types";
 import {erc20Abi} from "../utils/abi";
-import {ERC20Contract} from "../utils/networks";
-import {DisplayAccount, ParsedAccount} from "./AccountHelper";
-import {ErrorView} from "./ErrorView";
+import {ErrorView} from "./ErrorView/index";
 import {Loader} from "./Loader";
 import {Web3Context} from "../contexts/Web3Context";
+import {DisplayAccount} from "./Account";
 
 export const AccountVerification: FunctionComponent<{
   setErc20Contracts: (erc20Contracts: Record<string, ERC20Contract>) => void;
@@ -35,32 +34,11 @@ export const AccountVerification: FunctionComponent<{
 
   return (
     <div>
-      <div className="account">
-        <div className="address field">
-          <span>any ethereum address</span>
-          <div className="control">
-            <input value={address} onChange={(e) => setAddress(e.target.value)} />
-          </div>
+      <div className="address field">
+        <span>any ethereum address</span>
+        <div className="control">
+          <input value={address} onChange={(e) => setAddress(e.target.value)} />
         </div>
-        {(accountStatus.result || accountStatus.error) && (
-          <div className="result">
-            <div className="nonce">
-              <span>type</span>
-              <input value={accountStatus?.result?.type ?? ""} disabled={true} />
-            </div>
-
-            <div className="result icon">
-              {accountStatus.loading ? (
-                <Loader />
-              ) : (
-                <div>
-                  <span>{accountStatus.error || !accountStatus.result ? "invalid" : "valid"}</span>
-                  <p style={{fontSize: "2em"}}>{accountStatus.error || !accountStatus.result ? "❌" : "✅"}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
 
       {accountStatus.result ? (
@@ -82,9 +60,6 @@ export const AccountVerification: FunctionComponent<{
     </div>
   );
 };
-
-const externalAddressStorageHash = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
-const externalAddressCodeHash = "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470";
 
 async function fetchAndVerifyAddressBalances({
   web3,
@@ -133,8 +108,5 @@ async function fetchAndVerifyAddressBalances({
     balance: web3.utils.fromWei(balance, "ether"),
     verified,
     tokens,
-    // TODO: Find a way to fix this
-    // type: proof.codeHash === externalAddressCodeHash ? "external" : "contract",
-    type: "external",
   };
 }

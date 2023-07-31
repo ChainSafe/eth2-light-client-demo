@@ -1,7 +1,7 @@
 import React, {useContext, useEffect, useState} from "react";
 import {computeSyncPeriodAtSlot} from "@lodestar/light-client/utils";
 import {SyncPeriod, allForks} from "@lodestar/types";
-import {toHexString} from "@chainsafe/ssz";
+import {toHexString} from "@lodestar/utils";
 import {ProofProviderContext} from "../contexts/ProofProviderContext";
 
 export function SyncStatus({

@@ -4,11 +4,12 @@ import Footer from "./components/Footer";
 import {ProofProviderView} from "./components/ProofProviderView";
 import {TrustedCheckpoint} from "./components/TrustedCheckpoint";
 import {ConfigurationContext} from "./contexts/ConfigurationContext";
-import {ERC20Contract, NetworkName, defaultNetworkTokens, networkDefault} from "./utils/networks";
+import {defaultNetworkTokens, networkDefault} from "./utils/networks";
 import {UiContext} from "./contexts/UiContext";
-import {Loader} from "./components/Loader";
-import {ErrorView} from "./components/ErrorView";
+import {Loader} from "./components/Loader/index";
+import {ErrorView} from "./components/ErrorView/index";
 import {ProofProviderContext} from "./contexts/ProofProviderContext";
+import {ERC20Contract, NetworkName} from "./types";
 
 export default function App(): JSX.Element {
   const {network, setNetwork, beaconUrl, setBeaconUrl, rpcUrl, setRpcUrl, trustedCheckpoint, setTrustedCheckpoint} =

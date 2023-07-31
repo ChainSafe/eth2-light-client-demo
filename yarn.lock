@@ -2389,6 +2389,21 @@
   resolved "https://registry.yarnpkg.com/@leichtgewicht/ip-codec/-/ip-codec-2.0.4.tgz#b2ac626d6cb9c8718ab459166d4bb405b8ffa78b"
   integrity sha512-Hcv+nVC0kZnQ3tD9GVu5xSMR4VVYOteQIr/hwFPVEvPdlXqgGEuRjiheChHgdM+JyqdgNcmzZOX/tnl0JOiI7A==
 
+"@lodestar/api@1.10.0-dev.7b5fc63e67":
+  version "1.10.0-dev.7b5fc63e67"
+  resolved "https://registry.yarnpkg.com/@lodestar/api/-/api-1.10.0-dev.7b5fc63e67.tgz#df6e12ce3abf3458f70eb933f52285752d6934ba"
+  integrity sha512-jrvyL2OA3YADfDNLzfv+BRwc8wYu673x8NnVEQaP3vxE9Xb5rnG7KoyM7HLC+zduRTv3DGFk7m5UCH+7MsenhQ==
+  dependencies:
+    "@chainsafe/persistent-merkle-tree" "^0.5.0"
+    "@chainsafe/ssz" "^0.10.2"
+    "@lodestar/config" "1.10.0-dev.7b5fc63e67"
+    "@lodestar/params" "1.10.0-dev.7b5fc63e67"
+    "@lodestar/types" "1.10.0-dev.7b5fc63e67"
+    "@lodestar/utils" "1.10.0-dev.7b5fc63e67"
+    cross-fetch "^4.0.0"
+    eventsource "^2.0.2"
+    qs "^6.11.1"
+
 "@lodestar/api@^1.9.1", "@lodestar/api@^1.9.2":
   version "1.9.2"
   resolved "https://registry.yarnpkg.com/@lodestar/api/-/api-1.9.2.tgz#038d49492ceff2473259dd10631d8eed39bd1816"
@@ -2404,6 +2419,15 @@
     eventsource "^2.0.2"
     qs "^6.11.1"
 
+"@lodestar/config@1.10.0-dev.7b5fc63e67":
+  version "1.10.0-dev.7b5fc63e67"
+  resolved "https://registry.yarnpkg.com/@lodestar/config/-/config-1.10.0-dev.7b5fc63e67.tgz#7252bb8dae177f23fbb6f6cb827b6c56f7423717"
+  integrity sha512-C//kBYk4PXH9kifj2CrW44DUWEsNXWrUBVqaGeFsccHapZqlBPROu0bTFxBDGELNDQduQ+OL5+JfiGe+6B4xbA==
+  dependencies:
+    "@chainsafe/ssz" "^0.10.2"
+    "@lodestar/params" "1.10.0-dev.7b5fc63e67"
+    "@lodestar/types" "1.10.0-dev.7b5fc63e67"
+
 "@lodestar/config@^1.9.1", "@lodestar/config@^1.9.2":
   version "1.9.2"
   resolved "https://registry.yarnpkg.com/@lodestar/config/-/config-1.9.2.tgz#0dfeeb70265d495fd0bbe66153f7e164736fad47"
@@ -2412,6 +2436,24 @@
     "@chainsafe/ssz" "^0.10.2"
     "@lodestar/params" "^1.9.2"
     "@lodestar/types" "^1.9.2"
+
+"@lodestar/light-client@1.10.0-dev.7b5fc63e67":
+  version "1.10.0-dev.7b5fc63e67"
+  resolved "https://registry.yarnpkg.com/@lodestar/light-client/-/light-client-1.10.0-dev.7b5fc63e67.tgz#46f703e4762c1b8b2b6daf7d2160604bbfa16afa"
+  integrity sha512-LZUhS3ABX2FOfx9ZawUZxo5GocICg1kfjfYWU9NoCEd4AfyWHitPmxfeWGGSgu0aQWibKv1q2cAtcOZRcP9f+Q==
+  dependencies:
+    "@chainsafe/bls" "7.1.1"
+    "@chainsafe/persistent-merkle-tree" "^0.5.0"
+    "@chainsafe/ssz" "^0.10.2"
+    "@lodestar/api" "1.10.0-dev.7b5fc63e67"
+    "@lodestar/config" "1.10.0-dev.7b5fc63e67"
+    "@lodestar/params" "1.10.0-dev.7b5fc63e67"
+    "@lodestar/state-transition" "1.10.0-dev.7b5fc63e67"
+    "@lodestar/types" "1.10.0-dev.7b5fc63e67"
+    "@lodestar/utils" "1.10.0-dev.7b5fc63e67"
+    cross-fetch "^4.0.0"
+    mitt "^3.0.0"
+    strict-event-emitter-types "^2.0.0"
 
 "@lodestar/light-client@^1.9.1":
   version "1.9.2"
@@ -2431,25 +2473,30 @@
     mitt "^3.0.0"
     strict-event-emitter-types "^2.0.0"
 
-"@lodestar/logger@^1.9.1":
-  version "1.9.2"
-  resolved "https://registry.yarnpkg.com/@lodestar/logger/-/logger-1.9.2.tgz#2cbe9f4fb03b2004f79a3b0c201965b42814d573"
-  integrity sha512-/eo7p98EEMbO/6/6ye3lWKYHSeQLTWfv4aVuzm9zcZAs64/GdZXoKuvyXdjs1oz7Dsf9OlnEWEhepL9rCh/NrQ==
+"@lodestar/logger@1.10.0-dev.7b5fc63e67":
+  version "1.10.0-dev.7b5fc63e67"
+  resolved "https://registry.yarnpkg.com/@lodestar/logger/-/logger-1.10.0-dev.7b5fc63e67.tgz#6aa6c18352bd5dd4ff3c29d39aea335571e5dfb0"
+  integrity sha512-7v1EdmPH6N48Vz5Zjc55KQBGUQvy8b/39GATB3DdlhPHBM5e27ETGgvN1CcE0qKUIiNPs81TOA6ra0aq/E5fPA==
   dependencies:
-    "@lodestar/utils" "^1.9.2"
+    "@lodestar/utils" "1.10.0-dev.7b5fc63e67"
     winston "^3.8.2"
     winston-daily-rotate-file "^4.7.1"
     winston-transport "^4.5.0"
+
+"@lodestar/params@1.10.0-dev.7b5fc63e67":
+  version "1.10.0-dev.7b5fc63e67"
+  resolved "https://registry.yarnpkg.com/@lodestar/params/-/params-1.10.0-dev.7b5fc63e67.tgz#51c580380cd82977bf59467be8f1909a1a9e4090"
+  integrity sha512-sJ598BJWoHxFH9OVAt2ilu84zDHdYppiis7odIiKYbj3lzImwL9f2M7t9w7v9EpYhyZZBjiTtKhLF1yrfN1R5A==
 
 "@lodestar/params@^1.9.1", "@lodestar/params@^1.9.2":
   version "1.9.2"
   resolved "https://registry.yarnpkg.com/@lodestar/params/-/params-1.9.2.tgz#ab102c6d80bc94b8129e470e6f8d0d551329b803"
   integrity sha512-Uj0OE4zYG4/DA7wd85aSN/F/DiyuwQxy9mA0yk/UmSaZO74moa+AxXeGMWbD4CB1t/7zbCxjczBxQ8PEEWL4Fw==
 
-"@lodestar/prover@^1.9.1":
-  version "1.9.1"
-  resolved "https://registry.yarnpkg.com/@lodestar/prover/-/prover-1.9.1.tgz#2ddb4c85f704ad66624446dafc77a18984c32b68"
-  integrity sha512-bmD6enguN2JDNIIvE/fJifSXDYClg856cmGBBruEGG6Jyveod6Xn+0SS91bG84rtnXhxWgWwF5Q5XXGLGyBe3g==
+"@lodestar/prover@next":
+  version "1.10.0-dev.7b5fc63e67"
+  resolved "https://registry.yarnpkg.com/@lodestar/prover/-/prover-1.10.0-dev.7b5fc63e67.tgz#5e27e96d56f6963ed5bd7792d6205301abc96d51"
+  integrity sha512-/IyiFXSjJqOekAX0avdDvWnW3jDMledUlLWiUuwMQSZzT193GI3WnGHHt9cruxkh4m1AOPfGQ38EadQsiBvnyw==
   dependencies:
     "@ethereumjs/block" "^4.2.2"
     "@ethereumjs/blockchain" "^6.2.2"
@@ -2460,19 +2507,36 @@
     "@ethereumjs/tx" "^4.1.2"
     "@ethereumjs/util" "^8.0.6"
     "@ethereumjs/vm" "^6.4.2"
-    "@lodestar/api" "^1.9.1"
-    "@lodestar/config" "^1.9.1"
-    "@lodestar/light-client" "^1.9.1"
-    "@lodestar/logger" "^1.9.1"
-    "@lodestar/params" "^1.9.1"
-    "@lodestar/types" "^1.9.1"
-    "@lodestar/utils" "^1.9.1"
+    "@lodestar/api" "1.10.0-dev.7b5fc63e67"
+    "@lodestar/config" "1.10.0-dev.7b5fc63e67"
+    "@lodestar/light-client" "1.10.0-dev.7b5fc63e67"
+    "@lodestar/logger" "1.10.0-dev.7b5fc63e67"
+    "@lodestar/params" "1.10.0-dev.7b5fc63e67"
+    "@lodestar/types" "1.10.0-dev.7b5fc63e67"
+    "@lodestar/utils" "1.10.0-dev.7b5fc63e67"
     ethereum-cryptography "^1.2.0"
     find-up "^6.3.0"
     http-proxy "^1.18.1"
     js-yaml "^4.1.0"
     source-map-support "^0.5.21"
     yargs "^17.7.1"
+
+"@lodestar/state-transition@1.10.0-dev.7b5fc63e67":
+  version "1.10.0-dev.7b5fc63e67"
+  resolved "https://registry.yarnpkg.com/@lodestar/state-transition/-/state-transition-1.10.0-dev.7b5fc63e67.tgz#b3040086b3dd291c3482f4396c210930c63f0bbe"
+  integrity sha512-LyUe9SaosmN9GOKjZd1iOaEfJ8kYZb41YXjRhPnU/V6fdSFVl3x8CNlwYaiOeX8e8D9pQGZAuQQRxyyT7H54zA==
+  dependencies:
+    "@chainsafe/as-sha256" "^0.3.1"
+    "@chainsafe/bls" "7.1.1"
+    "@chainsafe/persistent-merkle-tree" "^0.5.0"
+    "@chainsafe/persistent-ts" "^0.19.1"
+    "@chainsafe/ssz" "^0.10.2"
+    "@lodestar/config" "1.10.0-dev.7b5fc63e67"
+    "@lodestar/params" "1.10.0-dev.7b5fc63e67"
+    "@lodestar/types" "1.10.0-dev.7b5fc63e67"
+    "@lodestar/utils" "1.10.0-dev.7b5fc63e67"
+    bigint-buffer "^1.1.5"
+    buffer-xor "^2.0.2"
 
 "@lodestar/state-transition@^1.9.2":
   version "1.9.2"
@@ -2491,6 +2555,14 @@
     bigint-buffer "^1.1.5"
     buffer-xor "^2.0.2"
 
+"@lodestar/types@1.10.0-dev.7b5fc63e67":
+  version "1.10.0-dev.7b5fc63e67"
+  resolved "https://registry.yarnpkg.com/@lodestar/types/-/types-1.10.0-dev.7b5fc63e67.tgz#e38e838fae9d46decc2df7209627b7d6e8b6677d"
+  integrity sha512-7HpMPlpjuLAe6TFNAG7Q2PNnQXJXreR74Wh8bVo++SiwRaYg6+CF20zbFGyhGpjYtOYkVat/LQ63X2LKkgyclQ==
+  dependencies:
+    "@chainsafe/ssz" "^0.10.2"
+    "@lodestar/params" "1.10.0-dev.7b5fc63e67"
+
 "@lodestar/types@^1.9.1", "@lodestar/types@^1.9.2":
   version "1.9.2"
   resolved "https://registry.yarnpkg.com/@lodestar/types/-/types-1.9.2.tgz#0c119566b7c2f6cbc1870a6141a0d7a739f27d96"
@@ -2498,6 +2570,18 @@
   dependencies:
     "@chainsafe/ssz" "^0.10.2"
     "@lodestar/params" "^1.9.2"
+
+"@lodestar/utils@1.10.0-dev.7b5fc63e67":
+  version "1.10.0-dev.7b5fc63e67"
+  resolved "https://registry.yarnpkg.com/@lodestar/utils/-/utils-1.10.0-dev.7b5fc63e67.tgz#53d0184b5b277af2d3ff00bd4089c4ec003e85b8"
+  integrity sha512-ffpSWin2k256nbtoopOqtRwHd/fr+ogZeRm3kWwf9AfJmxO+d8snXe02MhTltvkV+3L0byTFLtmqOanQNp2oOw==
+  dependencies:
+    "@chainsafe/as-sha256" "^0.3.1"
+    any-signal "3.0.1"
+    bigint-buffer "^1.1.5"
+    case "^1.6.3"
+    chalk "^5.2.0"
+    js-yaml "^4.1.0"
 
 "@lodestar/utils@^1.9.1", "@lodestar/utils@^1.9.2":
   version "1.9.2"
@@ -5180,7 +5264,7 @@ create-require@^1.1.0:
   resolved "https://registry.yarnpkg.com/create-require/-/create-require-1.1.1.tgz#c1d7e8f1e5f6cfc9ff65f9cd352d37348756c333"
   integrity sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==
 
-cross-fetch@^3.1.4:
+cross-fetch@3.1.5, cross-fetch@^3.1.4, cross-fetch@^4.0.0:
   version "3.1.5"
   resolved "https://registry.yarnpkg.com/cross-fetch/-/cross-fetch-3.1.5.tgz#e1389f44d9e7ba767907f7af8454787952ab534f"
   integrity sha512-lvb1SBsI0Z7GDwmuid+mU3kWVBwTVUbe7S0H52yaaAdQOXq2YktTCZdlAcNKFzE6QtRz0snpw9bNiPeOIkkQvw==

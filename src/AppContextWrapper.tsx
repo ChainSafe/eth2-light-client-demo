@@ -5,14 +5,13 @@ import {UiContext} from "./contexts/UiContext";
 import {ConfigurationContext} from "./contexts/ConfigurationContext";
 import {ApiContext} from "./contexts/ApiContext";
 import {Web3Context} from "./contexts/Web3Context";
-import {NetworkName, defaultNetworkUrls, getChainConfig, networkDefault} from "./utils/networks";
-import {ProofProvider} from "./types";
+import {defaultNetworkUrls, getChainConfig, networkDefault} from "./utils/networks";
+import {NetworkName, ProofProvider} from "./types";
 import Web3 from "web3";
 import {Api} from "@lodestar/api";
 import {createChainForkConfig} from "@lodestar/config";
 import {getApiClient} from "./utils/api";
-import {createVerifiedExecutionProvider, LCTransport} from "@lodestar/prover";
-import {NetworkName as ConfigNetworkName} from "@lodestar/config/networks";
+import {createVerifiedExecutionProvider, LCTransport} from "@lodestar/prover/browser";
 
 export const AppContextWrapper = () => {
   const [network, setNetwork] = useState<NetworkName>(networkDefault);
@@ -60,10 +59,13 @@ export const AppContextWrapper = () => {
         transport: LCTransport.Rest,
         urls: [beaconUrl],
         wsCheckpoint: checkpoint,
-        network: network as ConfigNetworkName,
+        network: network as any,
         logger: console as any,
       });
       setProofProvider(proofProvider);
+
+      // @ts-expect-error
+      window["proofProvider"] = proofProvider;
       web3.current = new Web3(provider);
       await proofProvider.waitToBeReady();
       setIsProofProviderReady(true);

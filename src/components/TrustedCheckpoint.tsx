@@ -1,9 +1,9 @@
 import {ApiError} from "@lodestar/api";
-import {toHexString} from "@lodestar/utils";
 import {FunctionComponent, useContext, useState} from "react";
 import {ApiContext} from "../contexts/ApiContext";
 import {ConfigurationContext} from "../contexts/ConfigurationContext";
 import {UiContext} from "../contexts/UiContext";
+import {toHexString} from "@lodestar/utils";
 
 export const TrustedCheckpoint: FunctionComponent = () => {
   const {setProgress, unsetProgress, setError} = useContext(UiContext);

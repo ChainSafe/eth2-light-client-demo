@@ -1,24 +1,7 @@
-import React, {useState} from "react";
-import {ErrorView} from "./ErrorView";
-import {ERC20Contract, NetworkName, defaultNetworkTokens} from "../utils/networks";
-
-enum FormAction {
-  Form = "form",
-  Action = "action",
-}
-
-export type NewContractForm = {
-  state: FormAction;
-  data: {name: string} & ERC20Contract;
-  error?: Error;
-};
-
-export type ParsedAccount = {
-  type: string;
-  balance: string;
-  verified: boolean;
-  tokens: {name: string; balance: string; contractAddress: string; verified: boolean}[];
-};
+import {useState} from "react";
+import {ERC20Contract, FormAction, NetworkName, NewContractForm} from "../../types";
+import {defaultNetworkTokens} from "../../utils/networks";
+import {ErrorView} from "../ErrorView/index";
 
 function defaultNewContract(): NewContractForm {
   return {
@@ -27,78 +10,7 @@ function defaultNewContract(): NewContractForm {
   };
 }
 
-export function DisplayAccount({
-  account,
-  erc20Contracts,
-  setErc20Contracts,
-  network,
-}: {
-  account: ParsedAccount;
-  erc20Contracts: Record<string, ERC20Contract>;
-  setErc20Contracts: (_records: Record<string, ERC20Contract>) => void;
-  network: NetworkName;
-}): JSX.Element {
-  return (
-    <>
-      <DisplayBalance name={"Ether"} contractAddress={""} balance={account.balance} />
-      {account.tokens.map((token) => (
-        <DisplayBalance
-          key={token.name}
-          {...token}
-          removeToken={(tokenName) => {
-            delete erc20Contracts[tokenName];
-            setErc20Contracts({...erc20Contracts});
-          }}
-        />
-      ))}
-      <NewContract erc20Contracts={erc20Contracts} setErc20Contracts={setErc20Contracts} network={network} />
-    </>
-  );
-}
-
-function truncateAmountWithCommas(amount: string): string {
-  const displayAmount = amount.match(/^-?\d+(?:\.\d{0,2})?/);
-  if (displayAmount !== null && displayAmount.length > 0) {
-    return displayAmount[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  }
-  return "NA";
-}
-
-export function DisplayBalance({
-  name,
-  balance,
-  contractAddress,
-  removeToken,
-}: {
-  name: string;
-  balance: string;
-  contractAddress?: string;
-  removeToken?: (_name: string) => void;
-}): JSX.Element {
-  return (
-    <>
-      <div className="displaybalance">
-        <div
-          className="remove"
-          onClick={() => {
-            if (removeToken) removeToken(name);
-          }}
-        >
-          {removeToken && "✖️"}
-        </div>
-        <div className="balance">
-          <input value={truncateAmountWithCommas(balance)} disabled={true} />
-        </div>
-        <div className="name">
-          <div>{name}</div>
-        </div>
-      </div>
-      <div className="displaycontract">{contractAddress && ` (${contractAddress})`}</div>
-    </>
-  );
-}
-
-function NewContract({
+export function NewContract({
   erc20Contracts,
   setErc20Contracts,
   network,

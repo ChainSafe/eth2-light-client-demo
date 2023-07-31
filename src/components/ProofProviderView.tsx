@@ -25,6 +25,7 @@ export const ProofProviderView: FunctionComponent = () => {
       proofProvider.lightClient.emitter.on(LightclientEvent.lightClientFinalityHeader, onNewHead);
     }
 
+    // eslint-disable-next-line no-console
     process().catch(console.error);
 
     return function () {

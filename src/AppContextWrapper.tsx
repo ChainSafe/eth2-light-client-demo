@@ -36,6 +36,7 @@ export const AppContextWrapper = () => {
       const config = createChainForkConfig(await getChainConfig(network, beaconUrl));
       const api = getApiClient(beaconUrl, config);
       setApi(api);
+      // eslint-disable-next-line no-console
     })().catch(console.error);
   }, [beaconUrl]);
 

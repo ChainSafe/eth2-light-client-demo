@@ -90,7 +90,6 @@ export default function App(): JSX.Element {
                   onClick={() =>
                     initFromTrustedCheckpoint().catch((e) => {
                       setError(e as Error);
-                      console.error(e);
                     })
                   }
                 >

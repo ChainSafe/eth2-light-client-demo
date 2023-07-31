@@ -1,57 +1,11 @@
-import {genesisData as networkGenesis} from "@lodestar/config/networks";
+import {ApiError} from "@lodestar/api";
+import {ChainConfig, chainConfigFromJson} from "@lodestar/config";
 import {networksChainConfig} from "@lodestar/config/networks";
-import {ApiError, getClient} from "@lodestar/api";
-import {config as configDefault} from "@lodestar/config/default";
-import {toHexString} from "@chainsafe/ssz";
-import {chainConfigFromJson} from "@lodestar/config";
 
-export enum NetworkName {
-  mainnet = "mainnet",
-  goerli = "goerli",
-  sepolia = "sepolia",
-  custom = "custom",
-}
+import {getApiClient} from "./api";
+import {ERC20Contract, NetworkName} from "../types";
+
 export const networkDefault = NetworkName.mainnet;
-
-export type ERC20Contract = {
-  contractAddress: string;
-  balanceMappingIndex: number;
-};
-
-export async function getNetworkData(network: NetworkName, beaconApiUrl?: string) {
-  switch (network) {
-    case NetworkName.mainnet:
-    case NetworkName.goerli:
-    case NetworkName.sepolia:
-      return {
-        genesisData: networkGenesis[network],
-        chainConfig: networksChainConfig[network],
-      };
-
-    default:
-      if (!beaconApiUrl) {
-        throw Error(`Unknown network: ${network}, requires beaconApiUrl to load config`);
-      }
-      const api = getClient({baseUrl: beaconApiUrl}, {config: configDefault});
-
-      const genesisRes = await api.beacon.getGenesis();
-      ApiError.assert(genesisRes);
-      const genesisData = genesisRes.response.data;
-
-      const configRes = await api.config.getSpec();
-      ApiError.assert(configRes);
-      const chainConfig = configRes.response.data;
-
-      const networkData = {
-        genesisData: {
-          genesisTime: Number(genesisData.genesisTime),
-          genesisValidatorsRoot: toHexString(genesisData.genesisValidatorsRoot),
-        },
-        chainConfig: chainConfigFromJson(chainConfig),
-      };
-      return networkData;
-  }
-}
 
 export const defaultNetworkUrls: Record<NetworkName, {beaconApiUrl: string; elRpcUrl: string}> = {
   [NetworkName.mainnet]: {
@@ -119,3 +73,24 @@ export const defaultNetworkTokens: Record<
     partial: getNetworkTokens(NetworkName.custom, true),
   },
 };
+
+export async function getChainConfig(network: NetworkName, beaconApiUrl?: string): Promise<ChainConfig> {
+  switch (network) {
+    case NetworkName.mainnet:
+    case NetworkName.goerli:
+    case NetworkName.sepolia:
+      return networksChainConfig[network];
+
+    default:
+      if (!beaconApiUrl) {
+        throw Error(`Unknown network: ${network}, requires beaconApiUrl to load config`);
+      }
+      const api = getApiClient(beaconApiUrl);
+
+      const configRes = await api.config.getSpec();
+      ApiError.assert(configRes);
+      const chainConfig = configRes.response.data;
+
+      return chainConfigFromJson(chainConfig);
+  }
+}

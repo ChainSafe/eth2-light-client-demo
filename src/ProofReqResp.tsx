@@ -3,7 +3,7 @@ import throttle from "lodash/throttle";
 import {Lightclient} from "@lodestar/light-client";
 import {TreeOffsetProof, computeDescriptor} from "@chainsafe/persistent-merkle-tree";
 import {ssz, allForks} from "@lodestar/types";
-import {CompositeType, toHexString, CompositeView, JsonPath} from "@chainsafe/ssz";
+import {CompositeType, toHexString, JsonPath} from "@chainsafe/ssz";
 import {ReqStatus} from "./types";
 import {ErrorView} from "./components/ErrorView";
 import {ApiError, Api} from "@lodestar/api";
@@ -50,9 +50,9 @@ export function ProofReqResp({client, head}: {client: Lightclient; head: allFork
           if (proof.leaves.length <= 0) {
             throw Error("Empty proof");
           }
-          const state: TreeBackedState = client.config
+          const state: Record<string, any> = client.config
             .getForkTypes(header.beacon.slot)
-            .BeaconState.createFromProof(proof) as unknown as TreeBackedState;
+            .BeaconState.createFromProof(proof);
           const stateStr = state ? renderState(pathsQueried, state) : [];
           setReqStatusProof({result: {proof, stateStr}});
         } catch (e) {
@@ -130,13 +130,7 @@ export function ProofReqResp({client, head}: {client: Lightclient; head: allFork
   );
 }
 
-type TreeBackedState =
-  | CompositeView<typeof ssz.phase0.BeaconState>
-  | CompositeView<typeof ssz.altair.BeaconState>
-  | CompositeView<typeof ssz.bellatrix.BeaconState>
-  | CompositeView<typeof ssz.capella.BeaconState>;
-
-function renderState(paths: Path[], state: TreeBackedState): StateRender {
+function renderState(paths: Path[], state: Record<string, any>): StateRender {
   if (!state) return [];
   return paths.map((path) => ({
     key: path.join("."),
@@ -144,7 +138,7 @@ function renderState(paths: Path[], state: TreeBackedState): StateRender {
   }));
 }
 
-function getStateData(state: TreeBackedState, path: Path): string {
+function getStateData(state: Record<string, any>, path: Path): string {
   let value = state as Record<string, any>;
   let type = state.type as CompositeType<object, unknown, unknown>;
   for (const indexer of path) {

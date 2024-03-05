@@ -35,6 +35,13 @@ import {ParsedAccount, DisplayAccount} from "./AccountHelper";
 
 const stateManager = new DefaultStateManager();
 
+/**
+ * A checkpoint is a 32bits hex string starting with `0x`
+ */
+function isCheckpoint(s: string): boolean {
+  return s.startsWith("0x") && s.length === 66;
+}
+
 export default function App(): JSX.Element {
   const [network, setNetwork] = useState<NetworkName>(networkDefault);
   const [beaconApiUrl, setBeaconApiUrl] = useState(defaultNetworkUrls[networkDefault].beaconApiUrl);
@@ -309,7 +316,11 @@ export default function App(): JSX.Element {
 
                 <div className="field">
                   <div className="control">
-                    <button className="strong-gradient" onClick={() => initializeFromCheckpointStr(checkpointRootStr)}>
+                    <button
+                      className="strong-gradient"
+                      disabled={!isCheckpoint(checkpointRootStr)}
+                      onClick={() => initializeFromCheckpointStr(checkpointRootStr)}
+                    >
                       Initialize from trusted checkpoint root
                     </button>
                   </div>

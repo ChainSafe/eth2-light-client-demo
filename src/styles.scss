@@ -178,6 +178,11 @@ button {
   &.dark {
     background: #434148;
   }
+
+  &[disabled] {
+    cursor: auto;
+    background: gray;
+  }
 }
 
 // input

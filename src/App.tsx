@@ -133,14 +133,7 @@ export default function App(): JSX.Element {
 
   async function initializeFromCheckpointStr(checkpointRootHex: string) {
     try {
-      // Validate root
-      if (!checkpointRootHex.startsWith("0x")) {
-        throw Error("Root must start with 0x");
-      }
       const checkpointRoot = fromHexString(checkpointRootHex);
-      if (checkpointRoot.length !== 32) {
-        throw Error(`Root must be 32 bytes long: ${checkpointRoot.length}`);
-      }
 
       setReqStatusInit({loading: `Syncing from trusted checkpoint: ${checkpointRootHex}`});
 

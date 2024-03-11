@@ -402,7 +402,7 @@ async function fetchAndVerifyAddressBalances({
     verified =
       verified &&
       stateRoot === contractProofStateRoot &&
-      contractProof.storageProof[0]?.key === balanceSlot &&
+      BigInt(contractProof.storageProof[0]?.key) === BigInt(balanceSlot) &&
       (await stateManager.verifyProof(contractProof));
     tokens.push({
       name: contractName,

@@ -12,8 +12,7 @@ import {getLcLoggerConsole} from "@lodestar/light-client/utils";
 
 import Web3 from "web3";
 import {toBuffer, keccak256} from "ethereumjs-util";
-import {DefaultStateManager} from "@ethereumjs/statemanager";
-import {numberToHex} from "web3-utils";
+
 import {defaultAbiCoder} from "@ethersproject/abi";
 
 import Footer from "./components/Footer";
@@ -32,8 +31,7 @@ import {
   ERC20Contract,
 } from "./Networks";
 import {ParsedAccount, DisplayAccount} from "./AccountHelper";
-
-const stateManager = new DefaultStateManager();
+import {isNullStorage, isExternalAddress, verifyProof} from "./utils";
 
 /**
  * A checkpoint is a 32bits hex string starting with `0x`
@@ -351,9 +349,6 @@ export default function App(): JSX.Element {
   );
 }
 
-const externalAddressStorageHash = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
-const externalAddressCodeHash = "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470";
-
 async function fetchAndVerifyAddressBalances({
   web3,
   executionPayload,
@@ -366,23 +361,16 @@ async function fetchAndVerifyAddressBalances({
   erc20Contracts: Record<string, ERC20Contract>;
 }): Promise<ParsedAccount> {
   if (!web3) throw Error(`No valid connection to EL`);
-  const params: [string, string[], number] = [address, [], executionPayload.blockNumber];
   const stateRoot = toHexString(executionPayload.stateRoot);
-  const proof = await web3.eth.getProof(...params);
-
-  const {balance, nonce} = proof;
-
-  // Verify the proof, web3 converts nonce and balance into number strings, however
-  // ethereumjs verify proof requires them in the original hex format
-  proof.nonce = numberToHex(proof.nonce);
-  proof.balance = numberToHex(proof.balance);
-
+  const proof = await web3.eth.getProof(address, [], executionPayload.blockNumber);
   const proofStateRoot = toHexString(keccak256(toBuffer(proof.accountProof[0])));
-  let verified =
+  const accountVerified =
     stateRoot === proofStateRoot &&
-    (proof.codeHash !== externalAddressCodeHash || proof.storageHash === externalAddressStorageHash) &&
-    (await stateManager.verifyProof(proof));
+    (!isExternalAddress(proof) || isNullStorage(proof)) &&
+    (await verifyProof(web3, {...proof, address}));
+
   let tokens = [];
+  let tokensVerified = true;
 
   for (const contractName of Object.keys(erc20Contracts)) {
     const {contractAddress, balanceMappingIndex} = erc20Contracts[contractName];
@@ -390,20 +378,16 @@ async function fetchAndVerifyAddressBalances({
       defaultAbiCoder.encode(["address", "uint"], [address, balanceMappingIndex])
     );
     const contractProof = await web3.eth.getProof(contractAddress, [balanceSlot], executionPayload.blockNumber);
-    if (contractProof.codeHash === externalAddressCodeHash) {
+    if (isExternalAddress(contractProof)) {
       throw Error(`No contract deployed at ${contractAddress} for ${contractName}`);
     }
     const contractProofStateRoot = toHexString(keccak256(toBuffer(contractProof.accountProof[0])));
-    // Verify the proof, web3 converts nonce and balance into number strings, however
-    // ethereumjs verify proof requires them in the original hex format
-    contractProof.nonce = numberToHex(contractProof.nonce);
-    contractProof.balance = numberToHex(contractProof.balance);
 
-    verified =
-      verified &&
+    tokensVerified =
+      tokensVerified &&
       stateRoot === contractProofStateRoot &&
       BigInt(contractProof.storageProof[0]?.key) === BigInt(balanceSlot) &&
-      (await stateManager.verifyProof(contractProof));
+      (await verifyProof(web3, {...contractProof, address: contractAddress}));
     tokens.push({
       name: contractName,
       contractAddress,
@@ -412,10 +396,10 @@ async function fetchAndVerifyAddressBalances({
   }
 
   return {
-    balance: web3.utils.fromWei(balance, "ether"),
-    nonce,
-    verified,
+    balance: web3.utils.fromWei(proof.balance, "ether"),
+    nonce: proof.nonce,
+    verified: accountVerified && tokensVerified,
     tokens,
-    type: proof.codeHash === externalAddressCodeHash ? "external" : "contract",
+    type: isExternalAddress(proof) ? "external" : "contract",
   };
 }
